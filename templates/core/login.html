@@ -1,0 +1,53 @@
+{% extends 'base.html' %}
+{% block title %}Log In - LifeOS{% endblock %}
+
+{% block unauth_content %}
+<div class="container py-5 my-auto">
+    <div class="row justify-content-center">
+        <div class="col-md-6 col-lg-5">
+            <div class="card border-0 shadow-lg rounded-4 overflow-hidden">
+                <div class="bg-primary text-white p-4 text-center">
+                    <div class="bg-white text-primary rounded-circle d-inline-flex align-items-center justify-content-center mb-2" style="width: 50px; height: 50px;">
+                        <i class="fa-solid fa-graduation-cap fs-4"></i>
+                    </div>
+                    <h4 class="fw-bold mb-0">Welcome to LifeOS</h4>
+                    <p class="small text-white-50 mb-0">JIIT Sector 128 • Student Productivity Platform</p>
+                </div>
+                <div class="card-body p-4">
+                    <form method="post" action="{% url 'login' %}">
+                        {% csrf_token %}
+                        <div class="mb-3">
+                            <label class="form-label fw-semibold small">Username</label>
+                            <div class="input-group">
+                                <span class="input-group-text bg-light"><i class="fa-solid fa-user text-muted"></i></span>
+                                <input type="text" name="username" class="form-control" placeholder="Enter username (e.g. lakshay_bansal)" required autofocus>
+                            </div>
+                        </div>
+
+                        <div class="mb-4">
+                            <label class="form-label fw-semibold small">Password</label>
+                            <div class="input-group">
+                                <span class="input-group-text bg-light"><i class="fa-solid fa-lock text-muted"></i></span>
+                                <input type="password" name="password" class="form-control" placeholder="Enter your password" required>
+                            </div>
+                        </div>
+
+                        <button type="submit" class="btn btn-primary w-100 py-2 fw-semibold shadow-sm mb-3">
+                            <i class="fa-solid fa-arrow-right-to-bracket me-2"></i> Log In to Dashboard
+                        </button>
+                    </form>
+
+                    <div class="card bg-light border-0 p-3 rounded-3 mb-3">
+                        <small class="fw-bold text-dark d-block mb-1"><i class="fa-solid fa-circle-info text-primary me-1"></i> Quick Demo Access:</small>
+                        <small class="text-muted d-block">Don't have an account yet? Registering takes 5 seconds, or register a new user to instantly load a full JIIT student dataset!</small>
+                    </div>
+
+                    <div class="text-center small">
+                        Don't have an account? <a href="{% url 'register' %}" class="fw-bold text-primary">Register here</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

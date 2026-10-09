@@ -1,0 +1,154 @@
+{% extends 'base.html' %}
+{% block title %}LifeOS - Student Life Management & Productivity Platform{% endblock %}
+
+{% block unauth_content %}
+<div class="bg-dark text-white py-5 position-relative overflow-hidden" style="background: radial-gradient(circle at top right, #1e3a8a, #0f172a 70%);">
+    <div class="container py-5">
+        <div class="row align-items-center">
+            <div class="col-lg-7 text-start">
+                <div class="d-inline-flex align-items-center gap-2 bg-primary bg-opacity-25 border border-primary border-opacity-50 px-3 py-1 rounded-pill mb-3">
+                    <i class="fa-solid fa-graduation-cap text-primary"></i>
+                    <span class="small fw-semibold text-info">JIIT Sector 128, Noida • Lab 26B16CS314</span>
+                </div>
+                <h1 class="display-4 fw-extrabold mb-3">
+                    Centralize Your Student Life with <span class="text-primary">LifeOS</span>
+                </h1>
+                <p class="lead text-slate-300 mb-4 text-light opacity-75">
+                    A unified personal productivity and life management platform built for college students. Seamlessly track subjects, attendance with 75% alerts, assignments, exams, Eisenhower prioritized tasks, habit streaks, personal finances, and internship pipelines.
+                </p>
+                <div class="d-flex flex-wrap gap-3">
+                    <a href="{% url 'register' %}" class="btn btn-primary btn-lg px-4 shadow">
+                        <i class="fa-solid fa-user-plus me-2"></i> Get Started Free
+                    </a>
+                    <a href="{% url 'login' %}" class="btn btn-outline-light btn-lg px-4">
+                        <i class="fa-solid fa-arrow-right-to-bracket me-2"></i> Log In
+                    </a>
+                </div>
+            </div>
+            <div class="col-lg-5 mt-5 mt-lg-0">
+                <div class="card bg-secondary bg-opacity-25 border border-secondary border-opacity-50 text-white rounded-4 p-4 shadow-lg">
+                    <div class="d-flex align-items-center justify-content-between mb-3 border-bottom border-secondary border-opacity-50 pb-2">
+                        <div class="d-flex align-items-center gap-2">
+                            <span class="badge bg-success">Sprint 1 - 5 Done</span>
+                            <span class="small text-light">Scrum Increment</span>
+                        </div>
+                        <span class="badge bg-primary">Prof. Vikas Sharma</span>
+                    </div>
+                    <h5 class="fw-bold mb-3">Fundamentals of Agile Software Development Lab</h5>
+                    <p class="small text-light opacity-75 mb-3">
+                        Designed & developed under the Scrum framework by:
+                    </p>
+                    <ul class="list-unstyled small mb-4">
+                        <li class="mb-2 d-flex justify-content-between">
+                            <span><i class="fa-solid fa-user-tie text-info me-2"></i> Vanshi Singla (992401030189)</span>
+                            <span class="badge bg-info text-dark">Product Owner</span>
+                        </li>
+                        <li class="mb-2 d-flex justify-content-between">
+                            <span><i class="fa-solid fa-user-gear text-primary me-2"></i> Lakshay Bansal (992401030191)</span>
+                            <span class="badge bg-primary">Scrum Master</span>
+                        </li>
+                        <li class="d-flex justify-content-between">
+                            <span><i class="fa-solid fa-user-check text-warning me-2"></i> Aashiya Gupta (992401030203)</span>
+                            <span class="badge bg-warning text-dark">QA / Integration</span>
+                        </li>
+                    </ul>
+                    <a href="{% url 'login' %}" class="btn btn-warning w-100 fw-semibold text-dark">
+                        <i class="fa-solid fa-play me-2"></i> Live Demo & Scrum Backlog
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Features Section -->
+<div class="py-5 bg-white">
+    <div class="container py-4">
+        <div class="text-center max-w-2xl mx-auto mb-5">
+            <span class="text-primary fw-bold text-uppercase small">Full-Stack Modules</span>
+            <h2 class="fw-bold mt-2">Built for the Modern College Student</h2>
+            <p class="text-muted">Replaces cluttered spreadsheets, calendars, and scattered notes with one unified platform.</p>
+        </div>
+
+        <div class="row g-4">
+            <!-- Feature 1 -->
+            <div class="col-md-4">
+                <div class="card h-100 border-0 shadow-sm p-3 rounded-4 bg-light">
+                    <div class="bg-primary text-white rounded-3 p-3 d-inline-flex align-items-center justify-content-center mb-3" style="width: 50px; height: 50px;">
+                        <i class="fa-solid fa-clipboard-user fs-4"></i>
+                    </div>
+                    <h5 class="fw-bold">Smart Attendance & 75% Alerts</h5>
+                    <p class="text-muted small">
+                        Calculates exact bunkable classes or required consecutive attendances to prevent debarment from exams.
+                    </p>
+                </div>
+            </div>
+
+            <!-- Feature 2 -->
+            <div class="col-md-4">
+                <div class="card h-100 border-0 shadow-sm p-3 rounded-4 bg-light">
+                    <div class="bg-danger text-white rounded-3 p-3 d-inline-flex align-items-center justify-content-center mb-3" style="width: 50px; height: 50px;">
+                        <i class="fa-solid fa-table-cells-large fs-4"></i>
+                    </div>
+                    <h5 class="fw-bold">Eisenhower Priority Matrix</h5>
+                    <p class="text-muted small">
+                        Automatically categorizes student tasks into 4 urgent-vs-important quadrants to conquer academic pressure.
+                    </p>
+                </div>
+            </div>
+
+            <!-- Feature 3 -->
+            <div class="col-md-4">
+                <div class="card h-100 border-0 shadow-sm p-3 rounded-4 bg-light">
+                    <div class="bg-success text-white rounded-3 p-3 d-inline-flex align-items-center justify-content-center mb-3" style="width: 50px; height: 50px;">
+                        <i class="fa-solid fa-fire fs-4"></i>
+                    </div>
+                    <h5 class="fw-bold">Habit Tracker & Consistency Streaks</h5>
+                    <p class="text-muted small">
+                        Daily 1-click check-ins for LeetCode, fitness, and reading with visual 14-day history heatmaps.
+                    </p>
+                </div>
+            </div>
+
+            <!-- Feature 4 -->
+            <div class="col-md-4">
+                <div class="card h-100 border-0 shadow-sm p-3 rounded-4 bg-light">
+                    <div class="bg-warning text-dark rounded-3 p-3 d-inline-flex align-items-center justify-content-center mb-3" style="width: 50px; height: 50px;">
+                        <i class="fa-solid fa-indian-rupee-sign fs-4"></i>
+                    </div>
+                    <h5 class="fw-bold">Student Budgeting & Expense Log</h5>
+                    <p class="text-muted small">
+                        Track monthly pocket money, canteen expenses, books, and get visual warnings when exceeding monthly limits.
+                    </p>
+                </div>
+            </div>
+
+            <!-- Feature 5 -->
+            <div class="col-md-4">
+                <div class="card h-100 border-0 shadow-sm p-3 rounded-4 bg-light">
+                    <div class="bg-purple text-white rounded-3 p-3 d-inline-flex align-items-center justify-content-center mb-3" style="width: 50px; height: 50px; background-color: #8b5cf6;">
+                        <i class="fa-solid fa-briefcase fs-4"></i>
+                    </div>
+                    <h5 class="fw-bold">Internship & Job Pipeline</h5>
+                    <p class="text-muted small">
+                        Track recruitment stages from Wishlist to OA, Technical Interviews, and Offer letters with interview debrief notes.
+                    </p>
+                </div>
+            </div>
+
+            <!-- Feature 6 -->
+            <div class="col-md-4">
+                <div class="card h-100 border-0 shadow-sm p-3 rounded-4 bg-light">
+                    <div class="bg-info text-white rounded-3 p-3 d-inline-flex align-items-center justify-content-center mb-3" style="width: 50px; height: 50px;">
+                        <i class="fa-solid fa-chart-line fs-4"></i>
+                    </div>
+                    <h5 class="fw-bold">Centralized Analytics</h5>
+                    <p class="text-muted small">
+                        Interactive Chart.js visualizations for CGPA, attendance distribution, task velocity, and expense allocations.
+                    </p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

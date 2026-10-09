@@ -1,0 +1,346 @@
+{% extends 'base.html' %}
+{% block title %}Dashboard - LifeOS{% endblock %}
+
+{% block content %}
+<div class="d-flex flex-wrap justify-content-between align-items-center mb-4">
+    <div>
+        <h3 class="fw-bold mb-1">Student Command Center</h3>
+        <p class="text-muted mb-0 small">
+            Hello, <strong class="text-dark">{{ user.get_full_name|default:user.username }}</strong> • Enrollment: <code>{{ user.profile.enrollment_no|default:'992401030191' }}</code> • Semester {{ user.profile.current_semester }}
+        </p>
+    </div>
+    <div class="d-flex gap-2 mt-2 mt-md-0">
+        <a href="{% url 'productivity:tasks' %}" class="btn btn-sm btn-primary">
+            <i class="fa-solid fa-plus me-1"></i> New Task
+        </a>
+        <a href="{% url 'academics:attendance' %}" class="btn btn-sm btn-outline-primary">
+            <i class="fa-solid fa-clipboard-check me-1"></i> Log Attendance
+        </a>
+        <a href="{% url 'agile_hub' %}" class="btn btn-sm btn-warning text-dark fw-semibold">
+            <i class="fa-solid fa-diagram-project me-1"></i> Lab Scrum Hub
+        </a>
+    </div>
+</div>
+
+<!-- Critical Attendance Alert if applicable -->
+{% if critical_attendance_count > 0 %}
+<div class="alert alert-danger border-danger shadow-sm d-flex align-items-center justify-content-between mb-4">
+    <div class="d-flex align-items-center">
+        <i class="fa-solid fa-triangle-exclamation fs-3 me-3 text-danger"></i>
+        <div>
+            <h6 class="fw-bold mb-0">Attendance Shortage Alert!</h6>
+            <small>You have {{ critical_attendance_count }} subject(s) below the JIIT 75% mandatory threshold. Review your bunk calculation now to avoid exam debarment.</small>
+        </div>
+    </div>
+    <a href="{% url 'academics:subjects_list' %}" class="btn btn-sm btn-danger ms-3 text-nowrap">View Subjects</a>
+</div>
+{% endif %}
+
+<!-- Key Metrics Stat Cards -->
+<div class="row g-3 mb-4">
+    <div class="col-sm-6 col-lg-3">
+        <div class="card card-stat p-3 bg-white">
+            <div class="d-flex justify-content-between align-items-start">
+                <div>
+                    <span class="text-muted small fw-semibold text-uppercase">Enrolled Subjects</span>
+                    <h3 class="fw-bold my-1 text-primary">{{ subjects.count }}</h3>
+                    <small class="text-muted">Target: 75% Attendance</small>
+                </div>
+                <div class="p-2 bg-primary-subtle text-primary rounded-3">
+                    <i class="fa-solid fa-book-open fs-4"></i>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-sm-6 col-lg-3">
+        <div class="card card-stat p-3 bg-white">
+            <div class="d-flex justify-content-between align-items-start">
+                <div>
+                    <span class="text-muted small fw-semibold text-uppercase">Pending Tasks</span>
+                    <h3 class="fw-bold my-1 text-danger">{{ pending_tasks_count }}</h3>
+                    <small class="text-success"><i class="fa-solid fa-check me-1"></i>{{ completed_tasks_count }} completed</small>
+                </div>
+                <div class="p-2 bg-danger-subtle text-danger rounded-3">
+                    <i class="fa-solid fa-list-check fs-4"></i>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-sm-6 col-lg-3">
+        <div class="card card-stat p-3 bg-white">
+            <div class="d-flex justify-content-between align-items-start">
+                <div>
+                    <span class="text-muted small fw-semibold text-uppercase">Monthly Balance</span>
+                    <h3 class="fw-bold my-1 {% if net_savings >= 0 %}text-success{% else %}text-danger{% endif %}">₹{{ net_savings }}</h3>
+                    <small class="text-muted">In: ₹{{ total_income }} | Out: ₹{{ total_expense }}</small>
+                </div>
+                <div class="p-2 bg-success-subtle text-success rounded-3">
+                    <i class="fa-solid fa-wallet fs-4"></i>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-sm-6 col-lg-3">
+        <div class="card card-stat p-3 bg-white">
+            <div class="d-flex justify-content-between align-items-start">
+                <div>
+                    <span class="text-muted small fw-semibold text-uppercase">Active Applications</span>
+                    <h3 class="fw-bold my-1 text-purple" style="color: #7c3aed;">{{ active_applications.count }}</h3>
+                    <small class="text-muted">Internships & SDE Roles</small>
+                </div>
+                <div class="p-2 rounded-3 text-purple" style="background-color: #f3e8ff; color: #7c3aed;">
+                    <i class="fa-solid fa-briefcase fs-4"></i>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row g-4">
+    <!-- Left Column: Urgent Tasks & Subjects Attendance -->
+    <div class="col-lg-7">
+        <!-- Urgent & Important Tasks (Eisenhower Q1) -->
+        <div class="card border-0 shadow-sm rounded-4 mb-4">
+            <div class="card-header bg-white border-0 py-3 d-flex justify-content-between align-items-center">
+                <div class="d-flex align-items-center gap-2">
+                    <span class="badge bg-danger">Q1 - Do First</span>
+                    <h6 class="fw-bold mb-0">High Priority / Urgent Tasks</h6>
+                </div>
+                <a href="{% url 'productivity:tasks' %}" class="small text-decoration-none fw-semibold">Eisenhower Matrix &rarr;</a>
+            </div>
+            <div class="card-body p-3 pt-0">
+                {% if tasks_q1 %}
+                <div class="list-group list-group-flush">
+                    {% for t in tasks_q1 %}
+                    <div class="list-group-item px-0 py-2 d-flex align-items-center justify-content-between">
+                        <div class="d-flex align-items-center gap-3">
+                            <a href="{% url 'productivity:task_toggle' t.id %}" class="btn btn-sm btn-outline-secondary rounded-circle p-1" style="width: 24px; height: 24px; display: inline-flex; align-items: center; justify-content: center;">
+                                <i class="fa-solid fa-check" style="font-size: 10px;"></i>
+                            </a>
+                            <div>
+                                <span class="fw-semibold text-dark d-block">{{ t.title }}</span>
+                                <small class="text-muted">
+                                    <span class="badge bg-light text-secondary border me-1">{{ t.get_category_display }}</span>
+                                    {% if t.due_date %}
+                                    <i class="fa-regular fa-clock me-1"></i> Due {{ t.due_date }}
+                                    {% endif %}
+                                </small>
+                            </div>
+                        </div>
+                        <span class="badge bg-danger-subtle text-danger border border-danger-subtle">Urgent</span>
+                    </div>
+                    {% endfor %}
+                </div>
+                {% else %}
+                <p class="text-muted small my-3 text-center">No urgent Q1 tasks pending! Good job! 🎉</p>
+                {% endif %}
+            </div>
+        </div>
+
+        <!-- Subjects & Real-Time Attendance Status -->
+        <div class="card border-0 shadow-sm rounded-4 mb-4">
+            <div class="card-header bg-white border-0 py-3 d-flex justify-content-between align-items-center">
+                <h6 class="fw-bold mb-0"><i class="fa-solid fa-graduation-cap text-primary me-2"></i>Subject Attendance & Bunk Forecast</h6>
+                <a href="{% url 'academics:subjects_list' %}" class="small text-decoration-none fw-semibold">Manage Subjects &rarr;</a>
+            </div>
+            <div class="card-body p-3 pt-0">
+                <div class="table-responsive">
+                    <table class="table table-hover align-middle mb-0">
+                        <thead class="table-light small text-uppercase text-muted">
+                            <tr>
+                                <th>Subject</th>
+                                <th>Held / Attended</th>
+                                <th>Percentage</th>
+                                <th>Bunk / Target Status</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for s in subjects %}
+                            {% with pct=s.attendance_percentage analysis=s.attendance_analysis %}
+                            <tr>
+                                <td>
+                                    <div class="fw-bold text-dark">{{ s.code }}</div>
+                                    <small class="text-muted">{{ s.name }}</small>
+                                </td>
+                                <td>
+                                    <span class="fw-semibold">{{ s.total_classes_attended }}</span> / {{ s.total_classes_held }}
+                                </td>
+                                <td>
+                                    <div class="d-flex align-items-center gap-2">
+                                        <div class="progress flex-grow-1" style="height: 6px;">
+                                            <div class="progress-bar {% if pct >= 75 %}bg-success{% else %}bg-danger{% endif %}" style="width: {{ pct }}%;"></div>
+                                        </div>
+                                        <span class="fw-bold small {% if pct >= 75 %}text-success{% else %}text-danger{% endif %}">{{ pct }}%</span>
+                                    </div>
+                                </td>
+                                <td>
+                                    {% if analysis.status == 'safe' %}
+                                    <span class="badge bg-success-subtle text-success border border-success-subtle">
+                                        Can miss {{ analysis.count }} class(es)
+                                    </span>
+                                    {% else %}
+                                    <span class="badge bg-danger-subtle text-danger border border-danger-subtle">
+                                        Must attend {{ analysis.count }}!
+                                    </span>
+                                    {% endif %}
+                                </td>
+                            </tr>
+                            {% endwith %}
+                            {% empty %}
+                            <tr>
+                                <td colspan="4" class="text-center text-muted small py-3">No subjects added yet. Click "+ Seed Demo Data" above!</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- Daily Habits Check-In -->
+        <div class="card border-0 shadow-sm rounded-4 mb-4">
+            <div class="card-header bg-white border-0 py-3 d-flex justify-content-between align-items-center">
+                <h6 class="fw-bold mb-0"><i class="fa-solid fa-fire text-danger me-2"></i>Daily Habits & Active Streaks</h6>
+                <a href="{% url 'productivity:habits' %}" class="small text-decoration-none fw-semibold">View Habit Matrix &rarr;</a>
+            </div>
+            <div class="card-body p-3 pt-0">
+                <div class="row g-2">
+                    {% for item in habits_today %}
+                    <div class="col-md-6">
+                        <div class="p-3 rounded-3 border d-flex align-items-center justify-content-between bg-light">
+                            <div class="d-flex align-items-center gap-3">
+                                <a href="{% url 'productivity:habit_toggle_today' item.habit.id %}" class="btn btn-sm {% if item.is_done %}btn-success{% else %}btn-outline-secondary{% endif %} rounded-circle p-1" style="width: 32px; height: 32px; display: inline-flex; align-items: center; justify-content: center;">
+                                    <i class="fa-solid fa-check"></i>
+                                </a>
+                                <div>
+                                    <span class="fw-semibold text-dark d-block text-truncate" style="max-width: 170px;">{{ item.habit.name }}</span>
+                                    <small class="text-danger fw-semibold">
+                                        <i class="fa-solid fa-fire me-1"></i>{{ item.streak }} day streak
+                                    </small>
+                                </div>
+                            </div>
+                            <span class="badge bg-white text-secondary border small">{{ item.habit.get_category_display }}</span>
+                        </div>
+                    </div>
+                    {% empty %}
+                    <p class="text-muted small text-center my-3">No daily habits configured yet.</p>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Right Column: Deadlines, Exams, Events, Goals -->
+    <div class="col-lg-5">
+        <!-- Upcoming Assignments & Exams -->
+        <div class="card border-0 shadow-sm rounded-4 mb-4">
+            <div class="card-header bg-white border-0 py-3 d-flex justify-content-between align-items-center">
+                <h6 class="fw-bold mb-0"><i class="fa-regular fa-calendar-check text-warning me-2"></i>Upcoming Academic Deadlines</h6>
+                <a href="{% url 'calendar_events:calendar' %}" class="small text-decoration-none fw-semibold">Full Calendar &rarr;</a>
+            </div>
+            <div class="card-body p-3 pt-0">
+                <ul class="list-group list-group-flush">
+                    {% for exam in upcoming_exams %}
+                    <li class="list-group-item px-0 py-2 border-bottom">
+                        <div class="d-flex align-items-center justify-content-between">
+                            <div>
+                                <span class="badge bg-danger me-1">Exam</span>
+                                <strong class="text-dark">{{ exam.exam_name }}</strong>
+                                <div class="small text-muted">{{ exam.subject.code }} • {{ exam.venue }}</div>
+                            </div>
+                            <div class="text-end">
+                                <span class="badge bg-light text-dark border">{{ exam.exam_date }}</span>
+                            </div>
+                        </div>
+                    </li>
+                    {% endfor %}
+
+                    {% for a in upcoming_assignments %}
+                    <li class="list-group-item px-0 py-2 border-bottom">
+                        <div class="d-flex align-items-center justify-content-between">
+                            <div>
+                                <span class="badge bg-primary me-1">Assignment</span>
+                                <strong class="text-dark">{{ a.title }}</strong>
+                                <div class="small text-muted">{{ a.subject.code }}</div>
+                            </div>
+                            <div class="text-end">
+                                <span class="badge bg-light text-dark border">{{ a.due_date|date:"M d, H:i" }}</span>
+                            </div>
+                        </div>
+                    </li>
+                    {% endfor %}
+
+                    {% for ev in upcoming_events %}
+                    <li class="list-group-item px-0 py-2 border-bottom">
+                        <div class="d-flex align-items-center justify-content-between">
+                            <div>
+                                <span class="badge bg-info text-dark me-1">{{ ev.get_event_type_display }}</span>
+                                <strong class="text-dark">{{ ev.title }}</strong>
+                                <div class="small text-muted">{{ ev.location }}</div>
+                            </div>
+                            <div class="text-end">
+                                <span class="badge bg-light text-dark border">{{ ev.start_time|date:"M d, H:i" }}</span>
+                            </div>
+                        </div>
+                    </li>
+                    {% endfor %}
+
+                    {% if not upcoming_exams and not upcoming_assignments and not upcoming_events %}
+                    <li class="list-group-item px-0 py-3 text-center text-muted small">No upcoming deadlines this week!</li>
+                    {% endif %}
+                </ul>
+            </div>
+        </div>
+
+        <!-- Goals Progress -->
+        <div class="card border-0 shadow-sm rounded-4 mb-4">
+            <div class="card-header bg-white border-0 py-3 d-flex justify-content-between align-items-center">
+                <h6 class="fw-bold mb-0"><i class="fa-solid fa-bullseye text-primary me-2"></i>Active Semester Goals</h6>
+                <a href="{% url 'productivity:goals' %}" class="small text-decoration-none fw-semibold">All Goals &rarr;</a>
+            </div>
+            <div class="card-body p-3 pt-0">
+                {% for g in active_goals %}
+                <div class="mb-3">
+                    <div class="d-flex justify-content-between align-items-center mb-1">
+                        <span class="fw-semibold text-dark small">{{ g.title }}</span>
+                        <span class="small fw-bold text-primary">{{ g.progress_percent }}%</span>
+                    </div>
+                    <div class="progress" style="height: 6px;">
+                        <div class="progress-bar bg-primary" style="width: {{ g.progress_percent }}%;"></div>
+                    </div>
+                    <small class="text-muted" style="font-size: 11px;">Target: {{ g.target_date }}</small>
+                </div>
+                {% empty %}
+                <p class="text-muted small text-center my-3">No active goals set yet.</p>
+                {% endfor %}
+            </div>
+        </div>
+
+        <!-- Career / Placement Pipeline -->
+        <div class="card border-0 shadow-sm rounded-4 mb-4">
+            <div class="card-header bg-white border-0 py-3 d-flex justify-content-between align-items-center">
+                <h6 class="fw-bold mb-0"><i class="fa-solid fa-briefcase text-purple me-2"></i>Internship & Placement Pipeline</h6>
+                <a href="{% url 'career:career' %}" class="small text-decoration-none fw-semibold">View Pipeline &rarr;</a>
+            </div>
+            <div class="card-body p-3 pt-0">
+                {% for app in active_applications %}
+                <div class="p-2 mb-2 rounded border bg-light d-flex align-items-center justify-content-between">
+                    <div>
+                        <strong class="text-dark d-block">{{ app.company_name }}</strong>
+                        <small class="text-muted">{{ app.role_title }} • {{ app.stipend_or_ctc }}</small>
+                    </div>
+                    <span class="badge {% if app.status == 'OFFER' %}bg-success{% elif app.status == 'INTERVIEW' %}bg-primary{% elif app.status == 'OA' %}bg-warning text-dark{% else %}bg-secondary{% endif %}">
+                        {{ app.get_status_display }}
+                    </span>
+                </div>
+                {% empty %}
+                <p class="text-muted small text-center my-3">No active job applications tracked yet.</p>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

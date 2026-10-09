@@ -1,0 +1,92 @@
+{% extends 'base.html' %}
+{% block title %}Register - LifeOS{% endblock %}
+
+{% block unauth_content %}
+<div class="container py-5 my-auto">
+    <div class="row justify-content-center">
+        <div class="col-md-8 col-lg-6">
+            <div class="card border-0 shadow-lg rounded-4 overflow-hidden">
+                <div class="bg-primary text-white p-4 text-center">
+                    <h4 class="fw-bold mb-1">Create Student LifeOS Account</h4>
+                    <p class="small text-white-50 mb-0">Join LifeOS to organize your college academics, goals, and career</p>
+                </div>
+                <div class="card-body p-4">
+                    <form method="post" action="{% url 'register' %}">
+                        {% csrf_token %}
+                        <div class="row g-3 mb-3">
+                            <div class="col-md-6">
+                                <label class="form-label fw-semibold small">First Name</label>
+                                <input type="text" name="first_name" class="form-control" placeholder="e.g. Lakshay" required>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label fw-semibold small">Last Name</label>
+                                <input type="text" name="last_name" class="form-control" placeholder="e.g. Bansal" required>
+                            </div>
+                        </div>
+
+                        <div class="row g-3 mb-3">
+                            <div class="col-md-6">
+                                <label class="form-label fw-semibold small">Username</label>
+                                <input type="text" name="username" class="form-control" placeholder="Choose a username" required>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label fw-semibold small">Email</label>
+                                <input type="email" name="email" class="form-control" placeholder="student@jiit.ac.in" required>
+                            </div>
+                        </div>
+
+                        <div class="row g-3 mb-3">
+                            <div class="col-md-6">
+                                <label class="form-label fw-semibold small">Enrollment / Student ID</label>
+                                <input type="text" name="enrollment_no" class="form-control" placeholder="e.g. 992401030191" value="992401030191">
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label fw-semibold small">Current Semester</label>
+                                <select name="semester" class="form-select">
+                                    <option value="1">Semester 1</option>
+                                    <option value="2">Semester 2</option>
+                                    <option value="3">Semester 3</option>
+                                    <option value="4">Semester 4</option>
+                                    <option value="5">Semester 5</option>
+                                    <option value="6" selected>Semester 6</option>
+                                    <option value="7">Semester 7</option>
+                                    <option value="8">Semester 8</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label fw-semibold small">Academic Branch</label>
+                            <input type="text" name="branch" class="form-control" value="Computer Science & Engineering">
+                        </div>
+
+                        <div class="row g-3 mb-4">
+                            <div class="col-md-6">
+                                <label class="form-label fw-semibold small">Password</label>
+                                <input type="password" name="password" class="form-control" placeholder="Min 6 characters" required>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label fw-semibold small">Confirm Password</label>
+                                <input type="password" name="confirm_password" class="form-control" placeholder="Re-type password" required>
+                            </div>
+                        </div>
+
+                        <div class="alert alert-info py-2 small mb-4">
+                            <i class="fa-solid fa-sparkles me-1 text-primary"></i>
+                            <strong>Auto-Seeder Active:</strong> A complete JIIT 6th-semester demo dataset (Subjects, Attendance, Exams, Tasks, Habits, Finances) will be auto-populated for immediate hands-on testing.
+                        </div>
+
+                        <button type="submit" class="btn btn-primary w-100 py-2 fw-semibold shadow-sm mb-3">
+                            <i class="fa-solid fa-user-plus me-2"></i> Register Account
+                        </button>
+                    </form>
+
+                    <div class="text-center small">
+                        Already have an account? <a href="{% url 'login' %}" class="fw-bold text-primary">Log in here</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

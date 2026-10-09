@@ -1,0 +1,72 @@
+{% extends 'base.html' %}
+{% block title %}Create your account - LifeOS{% endblock %}
+
+{% block unauth_content %}
+<div class="row justify-content-center">
+    <div class="col-md-6 col-lg-5">
+        <div class="card border-0 rounded-4 shadow-sm p-4 bg-white" style="border-radius: 16px;">
+            <div class="mb-4">
+                <h2 class="fw-bold mb-1" style="color: #3b82f6;">LifeOS</h2>
+                <h4 class="fw-bold text-dark">Create your account</h4>
+            </div>
+
+            <form method="post" action="{% url 'register' %}">
+                {% csrf_token %}
+                <div class="mb-3">
+                    <label class="form-label small fw-semibold text-secondary">Username</label>
+                    <input type="text" name="username" class="form-control bg-light border-1" required>
+                    {% if form.username.errors %}<div class="text-danger small">{{ form.username.errors }}</div>{% endif %}
+                </div>
+
+                <div class="row g-2 mb-3">
+                    <div class="col-6">
+                        <label class="form-label small fw-semibold text-secondary">First name</label>
+                        <input type="text" name="first_name" class="form-control bg-light border-1" required>
+                    </div>
+                    <div class="col-6">
+                        <label class="form-label small fw-semibold text-secondary">Last name</label>
+                        <input type="text" name="last_name" class="form-control bg-light border-1" required>
+                    </div>
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label small fw-semibold text-secondary">Email</label>
+                    <input type="email" name="email" class="form-control bg-light border-1" required>
+                    {% if form.email.errors %}<div class="text-danger small">{{ form.email.errors }}</div>{% endif %}
+                </div>
+
+                <div class="row g-2 mb-3">
+                    <div class="col-6">
+                        <label class="form-label small fw-semibold text-secondary">Enrollment No.</label>
+                        <input type="text" name="enrollment_no" class="form-control bg-light border-1">
+                    </div>
+                    <div class="col-6">
+                        <label class="form-label small fw-semibold text-secondary">Semester</label>
+                        <input type="number" name="semester" class="form-control bg-light border-1" value="5" min="1" max="8">
+                    </div>
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label small fw-semibold text-secondary">Password</label>
+                    <input type="password" name="password1" class="form-control bg-light border-1" required>
+                    {% if form.password1.errors %}<div class="text-danger small">{{ form.password1.errors }}</div>{% endif %}
+                </div>
+
+                <div class="mb-4">
+                    <label class="form-label small fw-semibold text-secondary">Confirm password</label>
+                    <input type="password" name="password2" class="form-control bg-light border-1" required>
+                    {% if form.password2.errors %}<div class="text-danger small">{{ form.password2.errors }}</div>{% endif %}
+                </div>
+
+                <button type="submit" class="btn btn-primary btn-lg w-100 fw-semibold fs-6 py-2" style="background-color: #3b82f6; border-color: #3b82f6;">
+                    Register
+                </button>
+            </form>
+
+            <div class="mt-4 text-start">
+                <a href="{% url 'login' %}" class="small text-decoration-none" style="color: #3b82f6;">Already have an account? Log in</a>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

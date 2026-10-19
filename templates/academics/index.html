@@ -1,0 +1,111 @@
+{% extends 'base.html' %}
+{% block page_title %}Academics: Attendance{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-end gap-2 mb-3">
+    <a href="{% url 'academics:subject_create' %}" class="btn btn-sm btn-primary" style="background-color: #3b82f6;">+ Add Subject</a>
+    <a href="{% url 'academics:attendance_create' %}" class="btn btn-sm btn-outline-primary">+ Log Attendance</a>
+    <a href="{% url 'academics:assignment_create' %}" class="btn btn-sm btn-outline-secondary">+ New Assignment</a>
+    <a href="{% url 'academics:exam_create' %}" class="btn btn-sm btn-outline-secondary">+ Schedule Exam</a>
+</div>
+
+<!-- Top Table: Subject-wise attendance (Figure: Academics) -->
+<div class="lifeos-card mb-4">
+    <h6 class="fw-bold mb-3 text-dark">Subject-wise attendance</h6>
+    <div class="table-responsive">
+        <table class="table table-borderless align-middle mb-0">
+            <thead>
+                <tr class="text-muted small border-bottom">
+                    <th style="width: 32%;">Subject</th>
+                    <th style="width: 14%;">Held</th>
+                    <th style="width: 14%;">Attended</th>
+                    <th style="width: 25%;">Attendance</th>
+                    <th style="width: 15%;">Status</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for row in subject_rows %}
+                <tr>
+                    <td class="fw-medium text-dark py-3">
+                        <span class="d-block">{{ row.subject.name }}</span>
+                        <small class="text-muted">{{ row.subject.code }}</small>
+                    </td>
+                    <td class="text-muted">{{ row.held }}</td>
+                    <td class="text-muted">{{ row.attended }}</td>
+                    <td>
+                        <div class="d-flex align-items-center gap-3">
+                            <div class="custom-progress flex-grow-1" style="height: 10px;">
+                                <div class="custom-progress-bar {% if row.is_safe %}bg-success{% else %}bg-danger{% endif %}" style="width: {{ row.percentage }}%; {% if row.is_safe %}background-color: #10b981 !important;{% else %}background-color: #ef4444 !important;{% endif %}"></div>
+                            </div>
+                            <span class="fw-bold small {% if row.is_safe %}text-success{% else %}text-danger{% endif %}">{{ row.percentage }}%</span>
+                        </div>
+                    </td>
+                    <td>
+                        {% if row.is_safe %}
+                        <span class="badge rounded-pill px-3 py-1 fw-semibold" style="background-color: #10b981; color: white;">
+                            Safe
+                        </span>
+                        {% else %}
+                        <span class="badge rounded-pill px-3 py-1 fw-semibold" style="background-color: #ef4444; color: white;">
+                            {{ row.status }}
+                        </span>
+                        {% endif %}
+                    </td>
+                </tr>
+                {% empty %}
+                <tr>
+                    <td colspan="5" class="text-center py-4 text-muted small">No subjects enrolled.</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<!-- Bottom Row: Upcoming assignments & Examinations and grades -->
+<div class="row g-4">
+    <!-- Upcoming assignments -->
+    <div class="col-lg-6">
+        <div class="lifeos-card h-100">
+            <h6 class="fw-bold mb-3 text-dark">Upcoming assignments</h6>
+            <div class="d-flex flex-column gap-3">
+                {% for a in assignments %}
+                <div class="d-flex align-items-center justify-content-between py-1">
+                    <span class="text-dark fw-medium">{{ a.title }}</span>
+                    <span class="text-muted small">{{ a.due_date|date:"d M" }}</span>
+                    <a href="{% url 'academics:assignment_toggle' a.id %}" class="badge rounded-pill px-3 py-1 fw-semibold text-decoration-none {% if a.status == 'submitted' %}bg-success text-white{% else %}bg-warning text-dark{% endif %}" style="{% if a.status == 'submitted' %}background-color: #10b981 !important;{% else %}background-color: #f59e0b !important; color: white !important;{% endif %}">
+                        {{ a.get_status_display }}
+                    </a>
+                </div>
+                {% empty %}
+                <div class="text-muted small text-center py-3">No upcoming assignments.</div>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+
+    <!-- Examinations and grades -->
+    <div class="col-lg-6">
+        <div class="lifeos-card h-100">
+            <h6 class="fw-bold mb-3 text-dark">Examinations and grades</h6>
+            <div class="d-flex flex-column gap-3">
+                {% for ex in exams %}
+                <div class="d-flex align-items-center justify-content-between py-1">
+                    <span class="text-dark fw-medium">{{ ex.subject.name|truncatechars:24 }} {{ ex.type }}</span>
+                    <span class="text-muted small">{{ ex.date|date:"M d" }}</span>
+                    <span class="fw-bold small" style="color: #2563eb;">
+                        {% if ex.marks_obtained is not None %}
+                        {{ ex.marks_obtained }} / {{ ex.maximum_marks }}
+                        {% else %}
+                        -
+                        {% endif %}
+                    </span>
+                </div>
+                {% empty %}
+                <div class="text-muted small text-center py-3">No examinations listed.</div>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

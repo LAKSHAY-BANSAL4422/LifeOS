@@ -1,0 +1,31 @@
+{% extends 'base.html' %}
+{% block page_title %}Log Attendance{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-6">
+        <div class="lifeos-card">
+            <h5 class="fw-bold mb-3">Log Subject Attendance</h5>
+            <form method="post">
+                {% csrf_token %}
+                <div class="mb-3">
+                    <label class="form-label small fw-semibold">Subject</label>
+                    {{ form.subject }}
+                </div>
+                <div class="mb-3">
+                    <label class="form-label small fw-semibold">Date</label>
+                    {{ form.date }}
+                </div>
+                <div class="mb-4">
+                    <label class="form-label small fw-semibold">Status</label>
+                    {{ form.status }}
+                </div>
+                <div class="d-flex justify-content-end gap-2">
+                    <a href="{% url 'academics:index' %}" class="btn btn-light">Cancel</a>
+                    <button type="submit" class="btn btn-primary" style="background-color: #3b82f6;">Record Attendance</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}

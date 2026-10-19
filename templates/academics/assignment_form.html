@@ -1,0 +1,47 @@
+{% extends 'base.html' %}
+{% block page_title %}New Assignment{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-6">
+        <div class="lifeos-card">
+            <h5 class="fw-bold mb-3">Add Assignment</h5>
+            <form method="post">
+                {% csrf_token %}
+                <div class="mb-3">
+                    <label class="form-label small fw-semibold">Subject</label>
+                    {{ form.subject }}
+                </div>
+                <div class="mb-3">
+                    <label class="form-label small fw-semibold">Title</label>
+                    <input type="text" name="title" class="form-control" placeholder="e.g. DBMS Assignment 3" required>
+                </div>
+                <div class="row g-2 mb-3">
+                    <div class="col-6">
+                        <label class="form-label small fw-semibold">Due Date</label>
+                        {{ form.due_date }}
+                    </div>
+                    <div class="col-6">
+                        <label class="form-label small fw-semibold">Status</label>
+                        {{ form.status }}
+                    </div>
+                </div>
+                <div class="row g-2 mb-4">
+                    <div class="col-6">
+                        <label class="form-label small fw-semibold">Max Marks</label>
+                        <input type="number" step="0.5" name="max_marks" class="form-control" value="20">
+                    </div>
+                    <div class="col-6">
+                        <label class="form-label small fw-semibold">Marks Obtained</label>
+                        <input type="number" step="0.5" name="marks_obtained" class="form-control" placeholder="Optional">
+                    </div>
+                </div>
+                <div class="d-flex justify-content-end gap-2">
+                    <a href="{% url 'academics:index' %}" class="btn btn-light">Cancel</a>
+                    <button type="submit" class="btn btn-primary" style="background-color: #3b82f6;">Save Assignment</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}

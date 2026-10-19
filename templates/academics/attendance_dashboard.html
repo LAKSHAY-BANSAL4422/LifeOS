@@ -1,0 +1,132 @@
+{% extends 'base.html' %}
+{% block title %}Attendance Tracker - LifeOS{% endblock %}
+
+{% block content %}
+<div class="d-flex flex-wrap justify-content-between align-items-center mb-4">
+    <div>
+        <h3 class="fw-bold mb-1">Attendance Tracker & Daily Logger</h3>
+        <p class="text-muted mb-0 small">Record daily class attendance, track leaves, and monitor percentages in real time (US05).</p>
+    </div>
+</div>
+
+<div class="row g-4">
+    <!-- Log Attendance Form -->
+    <div class="col-lg-4">
+        <div class="card border-0 shadow-sm rounded-4 p-4 bg-white mb-4">
+            <h5 class="fw-bold mb-3"><i class="fa-solid fa-calendar-check text-primary me-2"></i>Log Attendance</h5>
+            <form method="post" action="{% url 'academics:attendance' %}">
+                {% csrf_token %}
+                <div class="mb-3">
+                    <label class="form-label small fw-semibold">Select Subject</label>
+                    <select name="subject_id" class="form-select" required>
+                        <option value="" disabled selected>-- Choose Course --</option>
+                        {% for s in subjects %}
+                        <option value="{{ s.id }}">{{ s.code }} - {{ s.name }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label small fw-semibold">Class Date</label>
+                    <input type="date" name="date" class="form-control" value="{{ today|date:'Y-m-d' }}" required>
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label small fw-semibold">Attendance Status</label>
+                    <div class="d-flex flex-column gap-2">
+                        <label class="form-check-label border p-2 rounded d-flex align-items-center gap-2 cursor-pointer">
+                            <input class="form-check-input" type="radio" name="status" value="PRESENT" checked>
+                            <span class="badge bg-success">Present</span>
+                            <small class="text-muted">Attended class in person/lab</small>
+                        </label>
+                        <label class="form-check-label border p-2 rounded d-flex align-items-center gap-2 cursor-pointer">
+                            <input class="form-check-input" type="radio" name="status" value="ABSENT">
+                            <span class="badge bg-danger">Absent</span>
+                            <small class="text-muted">Missed or bunked class</small>
+                        </label>
+                        <label class="form-check-label border p-2 rounded d-flex align-items-center gap-2 cursor-pointer">
+                            <input class="form-check-input" type="radio" name="status" value="DUTY_LEAVE">
+                            <span class="badge bg-info text-dark">Duty Leave / Medical</span>
+                            <small class="text-muted">Authorized college duty</small>
+                        </label>
+                        <label class="form-check-label border p-2 rounded d-flex align-items-center gap-2 cursor-pointer">
+                            <input class="form-check-input" type="radio" name="status" value="CANCELLED">
+                            <span class="badge bg-secondary">Cancelled</span>
+                            <small class="text-muted">Faculty on leave / Holiday</small>
+                        </label>
+                    </div>
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label small fw-semibold">Remarks / Topic (Optional)</label>
+                    <input type="text" name="remarks" class="form-control" placeholder="e.g. Sprint velocity lecture">
+                </div>
+
+                <button type="submit" class="btn btn-primary w-100 py-2 fw-semibold">
+                    <i class="fa-solid fa-check me-1"></i> Record Attendance
+                </button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Attendance History Log Table -->
+    <div class="col-lg-8">
+        <div class="card border-0 shadow-sm rounded-4 bg-white overflow-hidden">
+            <div class="card-header bg-white border-0 py-3 d-flex justify-content-between align-items-center">
+                <h5 class="fw-bold mb-0">Recent Attendance Records</h5>
+                <span class="badge bg-light text-muted border">Showing latest 25 logs</span>
+            </div>
+            <div class="card-body p-0">
+                <div class="table-responsive">
+                    <table class="table table-hover align-middle mb-0">
+                        <thead class="table-light small text-uppercase text-muted">
+                            <tr>
+                                <th>Date</th>
+                                <th>Subject</th>
+                                <th>Status</th>
+                                <th>Remarks</th>
+                                <th class="text-end">Action</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for rec in recent_records %}
+                            <tr>
+                                <td><span class="fw-semibold">{{ rec.date }}</span></td>
+                                <td>
+                                    <strong class="text-dark">{{ rec.subject.code }}</strong>
+                                    <small class="text-muted d-block">{{ rec.subject.name|truncatechars:30 }}</small>
+                                </td>
+                                <td>
+                                    {% if rec.status == 'PRESENT' %}
+                                    <span class="badge bg-success-subtle text-success border border-success-subtle"><i class="fa-solid fa-check me-1"></i>Present</span>
+                                    {% elif rec.status == 'ABSENT' %}
+                                    <span class="badge bg-danger-subtle text-danger border border-danger-subtle"><i class="fa-solid fa-xmark me-1"></i>Absent</span>
+                                    {% elif rec.status == 'DUTY_LEAVE' %}
+                                    <span class="badge bg-info-subtle text-info border border-info-subtle">Duty Leave</span>
+                                    {% else %}
+                                    <span class="badge bg-secondary-subtle text-secondary border border-secondary-subtle">Cancelled</span>
+                                    {% endif %}
+                                </td>
+                                <td><small class="text-muted">{{ rec.remarks|default:'-' }}</small></td>
+                                <td class="text-end">
+                                    <form method="post" action="{% url 'academics:attendance_delete' rec.id %}" class="d-inline" onsubmit="return confirm('Delete this record?');">
+                                        {% csrf_token %}
+                                        <button type="submit" class="btn btn-sm btn-outline-danger p-1" style="width: 28px; height: 28px;">
+                                            <i class="fa-solid fa-trash" style="font-size: 11px;"></i>
+                                        </button>
+                                    </form>
+                                </td>
+                            </tr>
+                            {% empty %}
+                            <tr>
+                                <td colspan="5" class="text-center py-4 text-muted small">No attendance records logged yet.</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

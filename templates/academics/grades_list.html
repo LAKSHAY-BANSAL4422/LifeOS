@@ -1,0 +1,150 @@
+{% extends 'base.html' %}
+{% block title %}Grades & CGPA Tracker - LifeOS{% endblock %}
+
+{% block content %}
+<div class="d-flex flex-wrap justify-content-between align-items-center mb-4">
+    <div>
+        <h3 class="fw-bold mb-1">Grades & Cumulative Performance (CGPA)</h3>
+        <p class="text-muted mb-0 small">Record semester grades, credits, grade points, and calculate overall GPA (US08).</p>
+    </div>
+    <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addGradeModal">
+        <i class="fa-solid fa-plus me-1"></i> Record Course Grade
+    </button>
+</div>
+
+<!-- CGPA Card -->
+<div class="row g-3 mb-4">
+    <div class="col-md-4">
+        <div class="card border-0 shadow-sm rounded-4 p-4 text-white bg-primary">
+            <span class="text-white-50 text-uppercase small fw-semibold">Calculated Cumulative GPA</span>
+            <h1 class="display-4 fw-bold my-1">{{ cgpa }} <span class="fs-5 text-white-50">/ 10.0</span></h1>
+            <small class="text-white-50">Weighted across {{ total_credits }} total course credits</small>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="card border-0 shadow-sm rounded-4 p-4 bg-white">
+            <span class="text-muted text-uppercase small fw-semibold">Target CGPA</span>
+            <h1 class="display-4 fw-bold my-1 text-success">{{ user.profile.target_cgpa }}</h1>
+            <small class="text-muted">Target set in Student Profile</small>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="card border-0 shadow-sm rounded-4 p-4 bg-white">
+            <span class="text-muted text-uppercase small fw-semibold">Graded Courses</span>
+            <h1 class="display-4 fw-bold my-1 text-dark">{{ grades.count }}</h1>
+            <small class="text-muted">Completed semester assessments</small>
+        </div>
+    </div>
+</div>
+
+<!-- Grades Table -->
+<div class="card border-0 shadow-sm rounded-4 bg-white overflow-hidden">
+    <div class="card-header bg-white border-0 py-3">
+        <h5 class="fw-bold mb-0">Grade History</h5>
+    </div>
+    <div class="table-responsive">
+        <table class="table table-hover align-middle mb-0">
+            <thead class="table-light small text-uppercase text-muted">
+                <tr>
+                    <th>Semester</th>
+                    <th>Course Code & Title</th>
+                    <th>Credits</th>
+                    <th>Letter Grade</th>
+                    <th>Grade Points</th>
+                    <th>Weighted Points</th>
+                    <th class="text-end">Action</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for g in grades %}
+                <tr>
+                    <td><span class="badge bg-light text-dark border">Sem {{ g.semester }}</span></td>
+                    <td>
+                        <strong class="text-dark">{{ g.subject.code }}</strong>
+                        <small class="text-muted d-block">{{ g.subject.name }}</small>
+                    </td>
+                    <td>{{ g.credits }}</td>
+                    <td>
+                        <span class="badge {% if 'A' in g.grade_letter %}bg-success{% elif 'B' in g.grade_letter %}bg-primary{% else %}bg-warning text-dark{% endif %} fs-6">
+                            {{ g.grade_letter }}
+                        </span>
+                    </td>
+                    <td><span class="fw-semibold">{{ g.grade_points }}</span></td>
+                    <td><strong class="text-primary">{% widthratio g.grade_points 1 g.credits %}</strong></td>
+                    <td class="text-end">
+                        <form method="post" action="{% url 'academics:grade_delete' g.id %}" class="d-inline" onsubmit="return confirm('Delete this grade record?');">
+                            {% csrf_token %}
+                            <button type="submit" class="btn btn-sm btn-outline-danger p-1" style="width: 28px; height: 28px;">
+                                <i class="fa-solid fa-trash" style="font-size: 11px;"></i>
+                            </button>
+                        </form>
+                    </td>
+                </tr>
+                {% empty %}
+                <tr>
+                    <td colspan="7" class="text-center py-5 text-muted small">No grade records logged yet.</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<!-- Modal -->
+<div class="modal fade" id="addGradeModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content rounded-4 border-0">
+            <div class="modal-header border-0 pb-0">
+                <h5 class="modal-title fw-bold">Record Course Grade</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <form method="post" action="{% url 'academics:grades' %}">
+                {% csrf_token %}
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label class="form-label small fw-semibold">Subject</label>
+                        <select name="subject_id" class="form-select" required>
+                            {% for s in subjects %}
+                            <option value="{{ s.id }}">{{ s.code }} - {{ s.name }} ({{ s.credits }} credits)</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="row g-2 mb-3">
+                        <div class="col-md-6">
+                            <label class="form-label small fw-semibold">Semester</label>
+                            <input type="number" name="semester" class="form-control" value="6" required>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label small fw-semibold">Credits</label>
+                            <input type="number" step="0.5" name="credits" class="form-control" value="3.0" required>
+                        </div>
+                    </div>
+                    <div class="row g-2 mb-3">
+                        <div class="col-md-6">
+                            <label class="form-label small fw-semibold">Grade Awarded</label>
+                            <select name="grade_letter" class="form-select">
+                                <option value="A+">A+ (Outstanding - 10)</option>
+                                <option value="A" selected>A (Excellent - 9)</option>
+                                <option value="B+">B+ (Very Good - 8)</option>
+                                <option value="B">B (Good - 7)</option>
+                                <option value="C+">C+ (Average - 6)</option>
+                                <option value="C">C (Pass - 5)</option>
+                                <option value="D">D (Borderline - 4)</option>
+                                <option value="F">F (Fail - 0)</option>
+                            </select>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label small fw-semibold">Grade Point</label>
+                            <input type="number" step="0.5" name="grade_points" class="form-control" value="9.0" required>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer border-0 pt-0">
+                    <button type="button" class="btn btn-light" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn btn-primary px-4">Save Grade</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}

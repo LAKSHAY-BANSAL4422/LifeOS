@@ -1,0 +1,98 @@
+{% extends 'base.html' %}
+{% block page_title %}Tasks sorted by priority score{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <!-- Filter pills matching Report Figure: Tasks sorted by priority score -->
+    <div class="d-inline-flex p-1 bg-white rounded-pill shadow-sm">
+        <a href="?status=all" class="btn btn-sm rounded-pill px-3 py-1 fw-medium {% if status_filter == 'all' %}btn-primary text-white{% else %}text-muted{% endif %}" style="{% if status_filter == 'all' %}background-color: #3b82f6; border-color: #3b82f6;{% endif %}">
+            All
+        </a>
+        <a href="?status=pending" class="btn btn-sm rounded-pill px-3 py-1 fw-medium {% if status_filter == 'pending' %}btn-primary text-white{% else %}text-muted{% endif %}" style="{% if status_filter == 'pending' %}background-color: #3b82f6; border-color: #3b82f6;{% endif %}">
+            Pending
+        </a>
+        <a href="?status=done" class="btn btn-sm rounded-pill px-3 py-1 fw-medium {% if status_filter == 'done' %}btn-primary text-white{% else %}text-muted{% endif %}" style="{% if status_filter == 'done' %}background-color: #3b82f6; border-color: #3b82f6;{% endif %}">
+            Done
+        </a>
+    </div>
+
+    <a href="{% url 'tasks:create' %}" class="btn btn-primary fw-medium px-4 py-2 rounded-3 shadow-sm" style="background-color: #3b82f6; border-color: #3b82f6;">
+        + Add task
+    </a>
+</div>
+
+<!-- Tasks Table matching Report Figure -->
+<div class="lifeos-card">
+    <div class="table-responsive">
+        <table class="table table-borderless align-middle mb-0">
+            <thead>
+                <tr class="text-muted small border-bottom">
+                    <th style="width: 32%;">Task</th>
+                    <th style="width: 14%;">Due</th>
+                    <th style="width: 14%;">Importance</th>
+                    <th style="width: 25%;">Progress</th>
+                    <th style="width: 10%;">Score</th>
+                    <th style="width: 5%;" class="text-end"></th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for item in task_items %}
+                {% with t=item.task %}
+                <tr class="border-bottom border-light">
+                    <td class="fw-medium text-dark py-3">
+                        <span class="{% if t.status == 'done' %}text-decoration-line-through text-muted{% endif %}">
+                            {{ t.title }}
+                        </span>
+                        {% if t.description %}
+                        <small class="text-muted d-block font-monospace" style="font-size: 11px;">{{ t.description|truncatechars:40 }}</small>
+                        {% endif %}
+                    </td>
+                    <td class="text-muted small">
+                        {% if t.due_date %}{{ t.due_date|date:"d M" }}{% else %}-{% endif %}
+                    </td>
+                    <td>
+                        <span class="badge rounded-pill px-3 py-1 fw-semibold {% if t.importance == 'high' %}bg-danger text-white{% elif t.importance == 'medium' %}bg-warning text-dark{% else %}bg-success text-white{% endif %}" style="{% if t.importance == 'high' %}background-color: #ef4444 !important;{% elif t.importance == 'medium' %}background-color: #f59e0b !important; color: white !important;{% else %}background-color: #10b981 !important;{% endif %}">
+                            {{ t.get_importance_display }}
+                        </span>
+                    </td>
+                    <td>
+                        <div class="d-flex align-items-center gap-2">
+                            <div class="custom-progress flex-grow-1" style="height: 8px;">
+                                <div class="custom-progress-bar bg-primary" style="width: {{ t.progress }}%; background-color: #3b82f6 !important;"></div>
+                            </div>
+                            <span class="text-muted small" style="width: 35px; text-align: right;">{{ t.progress }}%</span>
+                        </div>
+                    </td>
+                    <td>
+                        <span class="priority-badge {{ item.score_class }}">
+                            {{ item.score }}
+                        </span>
+                    </td>
+                    <td class="text-end">
+                        <div class="d-flex align-items-center justify-content-end gap-2">
+                            <a href="{% url 'tasks:toggle' t.id %}" class="text-decoration-none" title="Toggle completion">
+                                {% if t.status == 'done' %}
+                                <i class="fa-solid fa-circle-check fs-5 text-success"></i>
+                                {% else %}
+                                <i class="fa-solid fa-check fs-5 text-success"></i>
+                                {% endif %}
+                            </a>
+                            <a href="{% url 'tasks:edit' t.id %}" class="text-muted small" title="Edit">
+                                <i class="fa-solid fa-pen" style="font-size: 12px;"></i>
+                            </a>
+                        </div>
+                    </td>
+                </tr>
+                {% endwith %}
+                {% empty %}
+                <tr>
+                    <td colspan="6" class="text-center py-5 text-muted small">
+                        No tasks found for this view. Click "+ Add task" above to create one.
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}

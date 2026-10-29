@@ -1,0 +1,79 @@
+{% extends 'base.html' %}
+{% block page_title %}Goals & Milestones{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+        <p class="text-muted small mb-0">Decompose long-term academic, career, and personal targets into trackable milestones (Section 4.10).</p>
+    </div>
+    <a href="{% url 'goals:create' %}" class="btn btn-primary" style="background-color: #3b82f6;">+ Add Goal</a>
+</div>
+
+<div class="row g-4">
+    {% for item in goal_cards %}
+    {% with g=item.goal %}
+    <div class="col-lg-6">
+        <div class="lifeos-card h-100">
+            <div class="d-flex justify-content-between align-items-start mb-2">
+                <span class="badge bg-light text-primary border text-uppercase" style="font-size: 11px;">{{ g.get_category_display }}</span>
+                <div class="d-flex align-items-center gap-2">
+                    <span class="badge {% if g.status == 'completed' %}bg-success{% elif item.is_overdue %}bg-danger{% else %}bg-secondary{% endif %}">
+                        {{ g.get_status_display }}
+                    </span>
+                    <form method="post" action="{% url 'goals:delete' g.id %}" onsubmit="return confirm('Delete this goal?');">
+                        {% csrf_token %}
+                        <button type="submit" class="btn btn-link text-muted p-0"><i class="fa-solid fa-trash" style="font-size: 12px;"></i></button>
+                    </form>
+                </div>
+            </div>
+
+            <h5 class="fw-bold text-dark mb-1">{{ g.title }}</h5>
+            <div class="text-muted small mb-3">Target: {{ g.target_date|date:"d M Y" }}</div>
+
+            <!-- Progress bar -->
+            <div class="mb-3">
+                <div class="d-flex justify-content-between align-items-center mb-1">
+                    <span class="small fw-semibold text-muted">Progress</span>
+                    <span class="small fw-bold text-primary">{{ item.progress }}%</span>
+                </div>
+                <div class="custom-progress">
+                    <div class="custom-progress-bar bg-primary" style="width: {{ item.progress }}%; background-color: #3b82f6 !important;"></div>
+                </div>
+            </div>
+
+            <!-- Milestones List -->
+            <div class="bg-light p-3 rounded-3 mb-3">
+                <div class="d-flex justify-content-between align-items-center mb-2">
+                    <span class="fw-semibold small text-dark">Milestones ({{ item.milestones.count }})</span>
+                    <a href="{% url 'goals:milestone_create' g.id %}" class="btn btn-sm btn-link p-0 text-decoration-none" style="font-size: 11px; color: #3b82f6;">+ Add step</a>
+                </div>
+                <div class="d-flex flex-column gap-2">
+                    {% for m in item.milestones %}
+                    <div class="d-flex align-items-center justify-content-between bg-white p-2 rounded border small">
+                        <div class="d-flex align-items-center gap-2">
+                            <a href="{% url 'goals:milestone_toggle' m.id %}" class="text-decoration-none">
+                                {% if m.completed %}
+                                <i class="fa-solid fa-circle-check text-success fs-6"></i>
+                                {% else %}
+                                <i class="fa-regular fa-circle text-muted fs-6"></i>
+                                {% endif %}
+                            </a>
+                            <span class="{% if m.completed %}text-decoration-line-through text-muted{% else %}text-dark fw-medium{% endif %}">
+                                {{ m.title }}
+                            </span>
+                        </div>
+                        {% if m.due_date %}<span class="text-muted" style="font-size: 11px;">{{ m.due_date|date:"d M" }}</span>{% endif %}
+                    </div>
+                    {% empty %}
+                    <small class="text-muted fst-italic">No milestones yet. Break this goal down into steps.</small>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endwith %}
+    {% empty %}
+    <div class="col-12 text-center py-5 text-muted small">No goals defined yet. Click "+ Add Goal" above.</div>
+    {% endfor %}
+</div>
+{% endblock %}

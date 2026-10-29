@@ -1,0 +1,167 @@
+{% extends 'base.html' %}
+{% block title %}Daily Habits & Streak History - LifeOS{% endblock %}
+
+{% block content %}
+<div class="d-flex flex-wrap justify-content-between align-items-center mb-4">
+    <div>
+        <h3 class="fw-bold mb-1">Daily Habit Tracker & Streaks</h3>
+        <p class="text-muted mb-0 small">Build consistency, maintain active streaks, and inspect 14-day completion history (US14 - US15).</p>
+    </div>
+    <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addHabitModal">
+        <i class="fa-solid fa-plus me-1"></i> New Daily Habit
+    </button>
+</div>
+
+<!-- Habit Matrix Table -->
+<div class="card border-0 shadow-sm rounded-4 bg-white overflow-hidden mb-4">
+    <div class="card-header bg-white border-0 py-3 d-flex justify-content-between align-items-center">
+        <h5 class="fw-bold mb-0">Habits Consistency Grid (Last 14 Days)</h5>
+        <div class="d-flex align-items-center gap-3 small text-muted">
+            <span><span class="habit-cell habit-done me-1" style="width: 14px; height: 14px;"></span> Completed</span>
+            <span><span class="habit-cell habit-missed me-1" style="width: 14px; height: 14px;"></span> Missed</span>
+        </div>
+    </div>
+    <div class="table-responsive">
+        <table class="table table-hover align-middle mb-0">
+            <thead class="table-light small text-uppercase text-muted">
+                <tr>
+                    <th style="min-width: 220px;">Habit Name</th>
+                    <th>Today</th>
+                    <th>Current Streak</th>
+                    <th>Best Streak</th>
+                    <th>30-Day Rate</th>
+                    <!-- 14 Date Columns -->
+                    {% for d in date_columns %}
+                    <th class="text-center px-1" style="font-size: 11px;">
+                        {{ d|date:"D" }}<br>{{ d|date:"d" }}
+                    </th>
+                    {% endfor %}
+                    <th class="text-end">Action</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for row in habit_rows %}
+                {% with h=row.habit %}
+                <tr>
+                    <td>
+                        <div class="d-flex align-items-center gap-2">
+                            <div class="text-white rounded-circle d-flex align-items-center justify-content-center p-2" style="background-color: {{ h.color }}; width: 32px; height: 32px;">
+                                <i class="fa-solid {{ h.icon }} small"></i>
+                            </div>
+                            <div>
+                                <strong class="text-dark d-block">{{ h.name }}</strong>
+                                <small class="text-muted">{{ h.get_category_display }}</small>
+                            </div>
+                        </div>
+                    </td>
+                    <td>
+                        <a href="{% url 'productivity:habit_toggle_today' h.id %}" class="btn btn-sm {% if row.is_done_today %}btn-success{% else %}btn-outline-secondary{% endif %} rounded-circle p-1" style="width: 32px; height: 32px; display: inline-flex; align-items: center; justify-content: center;" title="Toggle today's check-in">
+                            <i class="fa-solid fa-check"></i>
+                        </a>
+                    </td>
+                    <td>
+                        <span class="badge bg-danger-subtle text-danger border border-danger-subtle px-2 py-1 fs-6">
+                            <i class="fa-solid fa-fire me-1"></i>{{ row.current_streak }}d
+                        </span>
+                    </td>
+                    <td>
+                        <span class="badge bg-light text-dark border">{{ row.longest_streak }} days</span>
+                    </td>
+                    <td>
+                        <div class="d-flex align-items-center gap-1">
+                            <span class="small fw-bold">{{ row.completion_rate }}%</span>
+                        </div>
+                    </td>
+                    <!-- 14 Day History Grid Cells -->
+                    {% for cell in row.history %}
+                    <td class="text-center px-1">
+                        {% if cell.completed %}
+                        <span class="habit-cell habit-done" title="{{ cell.date }}: Completed">✓</span>
+                        {% else %}
+                        <span class="habit-cell habit-missed" title="{{ cell.date }}: Missed">·</span>
+                        {% endif %}
+                    </td>
+                    {% endfor %}
+                    <td class="text-end">
+                        <form method="post" action="{% url 'productivity:habit_delete' h.id %}" class="d-inline" onsubmit="return confirm('Delete this habit?');">
+                            {% csrf_token %}
+                            <button type="submit" class="btn btn-sm btn-link text-danger p-0"><i class="fa-solid fa-trash"></i></button>
+                        </form>
+                    </td>
+                </tr>
+                {% endwith %}
+                {% empty %}
+                <tr>
+                    <td colspan="20" class="text-center py-5 text-muted small">No daily habits tracked yet.</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<!-- Modal -->
+<div class="modal fade" id="addHabitModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content rounded-4 border-0">
+            <div class="modal-header border-0 pb-0">
+                <h5 class="modal-title fw-bold">Track New Daily Habit</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <form method="post" action="{% url 'productivity:habits' %}">
+                {% csrf_token %}
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label class="form-label small fw-semibold">Habit Title</label>
+                        <input type="text" name="name" class="form-control" placeholder="e.g. 2 LeetCode Problems Daily" required>
+                    </div>
+                    <div class="row g-2 mb-3">
+                        <div class="col-md-6">
+                            <label class="form-label small fw-semibold">Category</label>
+                            <select name="category" class="form-select">
+                                <option value="CODING" selected>Coding / DSA / LeetCode</option>
+                                <option value="STUDY">Study & Research</option>
+                                <option value="HEALTH">Health & Exercise</option>
+                                <option value="MINDFULNESS">Sleep & Mindfulness</option>
+                                <option value="READING">Books & Reading</option>
+                            </select>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label small fw-semibold">Target Frequency</label>
+                            <select name="target_days_per_week" class="form-select">
+                                <option value="7" selected>Everyday (7 days/wk)</option>
+                                <option value="5">Weekdays (5 days/wk)</option>
+                                <option value="3">3 Days a week</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="row g-2 mb-3">
+                        <div class="col-md-6">
+                            <label class="form-label small fw-semibold">Color Tag</label>
+                            <input type="color" name="color" class="form-control form-control-color w-100" value="#10b981">
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label small fw-semibold">Icon</label>
+                            <select name="icon" class="form-select">
+                                <option value="fa-code" selected>Code (DSA)</option>
+                                <option value="fa-book-open">Book / Study</option>
+                                <option value="fa-dumbbell">Gym / Workout</option>
+                                <option value="fa-fire">Fire / Energy</option>
+                                <option value="fa-bed">Sleep / Rest</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label small fw-semibold">Short Motivation / Description</label>
+                        <input type="text" name="description" class="form-control" placeholder="Revise problem patterns before summer placements">
+                    </div>
+                </div>
+                <div class="modal-footer border-0 pt-0">
+                    <button type="button" class="btn btn-light" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn btn-primary px-4">Start Habit</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}

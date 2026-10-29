@@ -1,0 +1,140 @@
+{% extends 'base.html' %}
+{% block title %}Goals & Milestones - LifeOS{% endblock %}
+
+{% block content %}
+<div class="d-flex flex-wrap justify-content-between align-items-center mb-4">
+    <div>
+        <h3 class="fw-bold mb-1">Goals & Progressive Milestones</h3>
+        <p class="text-muted mb-0 small">Decompose long-term objectives into actionable milestones with automatic % progress tracking (US12 - US13).</p>
+    </div>
+    <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addGoalModal">
+        <i class="fa-solid fa-plus me-1"></i> New Long-term Goal
+    </button>
+</div>
+
+<!-- Goals List -->
+<div class="row g-4">
+    {% for g in goals %}
+    <div class="col-lg-6">
+        <div class="card border-0 shadow-sm rounded-4 h-100 p-4 bg-white">
+            <div class="d-flex justify-content-between align-items-start mb-2">
+                <span class="badge bg-light text-primary border">{{ g.get_category_display }}</span>
+                <div class="d-flex align-items-center gap-2">
+                    <span class="badge {% if g.status == 'ACHIEVED' %}bg-success{% elif g.status == 'IN_PROGRESS' %}bg-primary{% else %}bg-secondary{% endif %}">
+                        {{ g.get_status_display }}
+                    </span>
+                    <form method="post" action="{% url 'productivity:goal_delete' g.id %}" onsubmit="return confirm('Delete this goal and its milestones?');">
+                        {% csrf_token %}
+                        <button type="submit" class="btn btn-sm btn-link text-muted p-0"><i class="fa-solid fa-trash"></i></button>
+                    </form>
+                </div>
+            </div>
+
+            <h5 class="fw-bold text-dark mb-1">{{ g.title }}</h5>
+            <p class="text-muted small mb-3">{{ g.description|default:'No description added.' }}</p>
+
+            <!-- Progress Bar -->
+            <div class="mb-3">
+                <div class="d-flex justify-content-between align-items-center mb-1 small">
+                    <span class="text-muted"><i class="fa-regular fa-calendar-check me-1"></i>Target: {{ g.target_date }}</span>
+                    <strong class="text-primary">{{ g.progress_percent }}% Completed</strong>
+                </div>
+                <div class="progress" style="height: 8px;">
+                    <div class="progress-bar {% if g.progress_percent == 100 %}bg-success{% else %}bg-primary{% endif %}" style="width: {{ g.progress_percent }}%;"></div>
+                </div>
+            </div>
+
+            <!-- Milestones Checklist -->
+            <div class="border rounded-3 p-3 bg-light mb-3">
+                <div class="d-flex justify-content-between align-items-center mb-2">
+                    <span class="fw-bold small text-dark"><i class="fa-solid fa-bars-progress me-1 text-primary"></i>Action Milestones</span>
+                    <small class="text-muted">{{ g.milestones.count }} steps</small>
+                </div>
+                <div class="d-flex flex-column gap-2">
+                    {% for m in g.milestones.all %}
+                    <div class="d-flex align-items-center justify-content-between bg-white p-2 rounded border small">
+                        <div class="d-flex align-items-center gap-2">
+                            <a href="{% url 'productivity:milestone_toggle' m.id %}" class="btn btn-sm {% if m.is_completed %}btn-success{% else %}btn-outline-secondary{% endif %} rounded-circle p-1" style="width: 22px; height: 22px; display: inline-flex; align-items: center; justify-content: center;">
+                                <i class="fa-solid fa-check" style="font-size: 10px;"></i>
+                            </a>
+                            <span class="{% if m.is_completed %}text-decoration-line-through text-muted{% else %}text-dark fw-semibold{% endif %}">
+                                {{ m.title }}
+                            </span>
+                        </div>
+                        {% if m.target_date %}
+                        <span class="text-muted" style="font-size: 11px;">{{ m.target_date }}</span>
+                        {% endif %}
+                    </div>
+                    {% empty %}
+                    <small class="text-muted fst-italic">No milestones added yet. Break this goal down below!</small>
+                    {% endfor %}
+                </div>
+            </div>
+
+            <!-- Quick Add Milestone Inline -->
+            <form method="post" action="{% url 'productivity:goals' %}" class="mt-auto">
+                {% csrf_token %}
+                <input type="hidden" name="action" value="add_milestone">
+                <input type="hidden" name="goal_id" value="{{ g.id }}">
+                <div class="input-group input-group-sm">
+                    <input type="text" name="title" class="form-control" placeholder="+ Add a step / milestone" required>
+                    <button class="btn btn-outline-primary" type="submit">Add</button>
+                </div>
+            </form>
+        </div>
+    </div>
+    {% empty %}
+    <div class="col-12 text-center py-5 text-muted">
+        <i class="fa-solid fa-bullseye fs-1 mb-2"></i>
+        <h5>No Goals Defined</h5>
+        <p class="small">Define semester targets like cracking internships, maintaining GPA, or mastering DSA.</p>
+    </div>
+    {% endfor %}
+</div>
+
+<!-- Modal -->
+<div class="modal fade" id="addGoalModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content rounded-4 border-0">
+            <div class="modal-header border-0 pb-0">
+                <h5 class="modal-title fw-bold">New Long-term Goal</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <form method="post" action="{% url 'productivity:goals' %}">
+                {% csrf_token %}
+                <input type="hidden" name="action" value="add_goal">
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label class="form-label small fw-semibold">Goal Title</label>
+                        <input type="text" name="title" class="form-control" placeholder="e.g. Crack Top SDE Summer 2026 Internship" required>
+                    </div>
+                    <div class="row g-2 mb-3">
+                        <div class="col-md-6">
+                            <label class="form-label small fw-semibold">Category</label>
+                            <select name="category" class="form-select">
+                                <option value="CAREER" selected>Career & Internships</option>
+                                <option value="ACADEMIC">Academic / CGPA</option>
+                                <option value="PERSONAL">Personal Growth</option>
+                                <option value="FITNESS">Fitness & Health</option>
+                                <option value="FINANCIAL">Financial & Savings</option>
+                            </select>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label small fw-semibold">Target Completion Date</label>
+                            <input type="date" name="target_date" class="form-control" required>
+                        </div>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label small fw-semibold">Description / Strategy</label>
+                        <textarea name="description" class="form-control" rows="2" placeholder="Why this goal matters and high level plan..."></textarea>
+                    </div>
+                </div>
+                <div class="modal-footer border-0 pt-0">
+                    <button type="button" class="btn btn-light" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn btn-primary px-4">Create Goal</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}

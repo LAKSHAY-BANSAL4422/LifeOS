@@ -1,0 +1,74 @@
+{% extends 'base.html' %}
+{% block page_title %}Habit Tracking{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+        <p class="text-muted small mb-0">Build consistency, track daily streaks, and view completion history (Section 4.11).</p>
+    </div>
+    <a href="{% url 'habits:create' %}" class="btn btn-primary" style="background-color: #3b82f6;">+ Add Habit</a>
+</div>
+
+<div class="lifeos-card mb-4">
+    <div class="table-responsive">
+        <table class="table table-borderless align-middle mb-0">
+            <thead>
+                <tr class="text-muted small border-bottom">
+                    <th style="min-width: 180px;">Habit</th>
+                    <th>Today</th>
+                    <th>Current Streak</th>
+                    <th>Best Streak</th>
+                    <th>30-Day Consistency</th>
+                    <th class="text-center" colspan="14">Last 14 Days</th>
+                    <th class="text-end"></th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for item in habit_items %}
+                {% with h=item.habit %}
+                <tr class="border-bottom border-light">
+                    <td class="fw-medium text-dark py-3">
+                        {{ h.name }}
+                    </td>
+                    <td>
+                        <a href="{% url 'habits:toggle_today' h.id %}" class="btn btn-sm {% if item.is_done %}btn-success text-white{% else %}btn-outline-secondary{% endif %} rounded-circle p-1" style="width: 28px; height: 28px; display: inline-flex; align-items: center; justify-content: center;">
+                            <i class="fa-solid fa-check" style="font-size: 11px;"></i>
+                        </a>
+                    </td>
+                    <td>
+                        <span class="fw-bold" style="color: #d97706;">{{ item.current_streak }}d</span>
+                    </td>
+                    <td class="text-muted">{{ item.longest_streak }}d</td>
+                    <td>
+                        <div class="d-flex align-items-center gap-2">
+                            <span class="small fw-semibold">{{ item.consistency_30d }}%</span>
+                        </div>
+                    </td>
+                    <!-- 14 Days History Grid -->
+                    {% for cell in item.history %}
+                    <td class="text-center px-1">
+                        {% if cell.completed %}
+                        <span class="badge rounded-1" style="background-color: #10b981; width: 14px; height: 14px; padding: 0;" title="{{ cell.date }}"></span>
+                        {% else %}
+                        <span class="badge rounded-1 bg-light border" style="width: 14px; height: 14px; padding: 0;" title="{{ cell.date }}"></span>
+                        {% endif %}
+                    </td>
+                    {% endfor %}
+                    <td class="text-end">
+                        <form method="post" action="{% url 'habits:delete' h.id %}" class="d-inline" onsubmit="return confirm('Delete this habit?');">
+                            {% csrf_token %}
+                            <button type="submit" class="btn btn-link text-muted p-0"><i class="fa-solid fa-trash" style="font-size: 11px;"></i></button>
+                        </form>
+                    </td>
+                </tr>
+                {% endwith %}
+                {% empty %}
+                <tr>
+                    <td colspan="20" class="text-center py-5 text-muted small">No habits created yet. Click "+ Add Habit" above.</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}

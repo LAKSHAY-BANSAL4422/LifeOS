@@ -1,0 +1,260 @@
+{% extends 'base.html' %}
+{% block title %}Finances & Student Budgets - LifeOS{% endblock %}
+
+{% block content %}
+<div class="d-flex flex-wrap justify-content-between align-items-center mb-4">
+    <div>
+        <h3 class="fw-bold mb-1">Personal Finances & Monthly Budgets</h3>
+        <p class="text-muted mb-0 small">Track college pocket money, expenses, UPI transactions, and budget limits (US16 - US18).</p>
+    </div>
+    <div class="d-flex gap-2">
+        <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addTransactionModal">
+            <i class="fa-solid fa-plus me-1"></i> Add Transaction
+        </button>
+        <button class="btn btn-outline-primary" data-bs-toggle="modal" data-bs-target="#setBudgetModal">
+            <i class="fa-solid fa-bullseye me-1"></i> Set Category Budget
+        </button>
+    </div>
+</div>
+
+<!-- Financial Summary Cards -->
+<div class="row g-3 mb-4">
+    <div class="col-md-4">
+        <div class="card border-0 shadow-sm rounded-4 p-4 bg-white">
+            <span class="text-muted text-uppercase small fw-semibold">Monthly Inflow (Income)</span>
+            <h2 class="fw-bold my-1 text-success">+₹{{ total_income }}</h2>
+            <small class="text-muted">Allowances, stipends, freelance</small>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="card border-0 shadow-sm rounded-4 p-4 bg-white">
+            <span class="text-muted text-uppercase small fw-semibold">Monthly Outflow (Expenses)</span>
+            <h2 class="fw-bold my-1 text-danger">-₹{{ total_expense }}</h2>
+            <small class="text-muted">Food, books, travel, entertainment</small>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="card border-0 shadow-sm rounded-4 p-4 bg-white">
+            <span class="text-muted text-uppercase small fw-semibold">Net Student Savings</span>
+            <h2 class="fw-bold my-1 {% if net_savings >= 0 %}text-primary{% else %}text-danger{% endif %}">₹{{ net_savings }}</h2>
+            <small class="text-muted">Available wallet balance for month {{ selected_month }}</small>
+        </div>
+    </div>
+</div>
+
+<div class="row g-4">
+    <!-- Category Budget Progress Meters -->
+    <div class="col-lg-5">
+        <div class="card border-0 shadow-sm rounded-4 p-4 bg-white mb-4">
+            <div class="d-flex justify-content-between align-items-center mb-3">
+                <h5 class="fw-bold mb-0"><i class="fa-solid fa-wallet text-primary me-2"></i>Category Budgets ({{ selected_month }})</h5>
+            </div>
+
+            {% for item in budget_items %}
+            {% with b=item.budget c=item.category %}
+            <div class="mb-4">
+                <div class="d-flex justify-content-between align-items-center mb-1 small">
+                    <span class="fw-semibold text-dark"><i class="fa-solid {{ c.icon|default:'fa-wallet' }} me-1" style="color: {{ c.color }};"></i> {{ c.name }}</span>
+                    <span>
+                        <strong>₹{{ item.spent }}</strong> / ₹{{ item.allocated }}
+                        <span class="badge {% if item.is_exceeded %}bg-danger{% else %}bg-secondary{% endif %} ms-1">{{ item.pct }}%</span>
+                    </span>
+                </div>
+                <div class="progress" style="height: 8px;">
+                    <div class="progress-bar {% if item.is_exceeded %}bg-danger{% elif item.pct > 80 %}bg-warning{% else %}bg-primary{% endif %}" style="width: {{ item.pct }}%;"></div>
+                </div>
+                <div class="d-flex justify-content-between mt-1" style="font-size: 11px;">
+                    {% if item.is_exceeded %}
+                    <span class="text-danger fw-semibold"><i class="fa-solid fa-circle-exclamation me-1"></i>Exceeded by ₹{{ item.remaining|slice:"1:" }}</span>
+                    {% else %}
+                    <span class="text-success"><i class="fa-solid fa-circle-check me-1"></i>Remaining: ₹{{ item.remaining }}</span>
+                    {% endif %}
+                    <form method="post" action="{% url 'finance:budget_delete' b.id %}" onsubmit="return confirm('Remove budget limit?');">
+                        {% csrf_token %}
+                        <button type="submit" class="btn btn-link text-muted p-0" style="font-size: 11px;">Remove</button>
+                    </form>
+                </div>
+            </div>
+            {% endwith %}
+            {% empty %}
+            <div class="text-center py-4 text-muted small">
+                No monthly budgets defined. Click "Set Category Budget" to track monthly limits.
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+
+    <!-- Transactions List -->
+    <div class="col-lg-7">
+        <div class="card border-0 shadow-sm rounded-4 bg-white overflow-hidden mb-4">
+            <div class="card-header bg-white border-0 py-3 d-flex justify-content-between align-items-center">
+                <h5 class="fw-bold mb-0">Transactions ({{ selected_month }})</h5>
+                <span class="badge bg-light text-muted border">{{ transactions.count }} record(s)</span>
+            </div>
+            <div class="table-responsive">
+                <table class="table table-hover align-middle mb-0">
+                    <thead class="table-light small text-uppercase text-muted">
+                        <tr>
+                            <th>Date</th>
+                            <th>Description</th>
+                            <th>Category</th>
+                            <th>Mode</th>
+                            <th>Amount</th>
+                            <th class="text-end">Action</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for t in transactions %}
+                        <tr>
+                            <td><small class="text-muted">{{ t.date|date:"M d" }}</small></td>
+                            <td>
+                                <strong class="text-dark d-block">{{ t.title }}</strong>
+                                {% if t.notes %}<small class="text-muted">{{ t.notes|truncatechars:35 }}</small>{% endif %}
+                            </td>
+                            <td>
+                                {% if t.category %}
+                                <span class="badge bg-light text-dark border">
+                                    <i class="fa-solid {{ t.category.icon }} me-1" style="color: {{ t.category.color }};"></i>{{ t.category.name }}
+                                </span>
+                                {% else %}
+                                <span class="badge bg-light text-muted border">General</span>
+                                {% endif %}
+                            </td>
+                            <td><small class="text-muted">{{ t.get_payment_method_display }}</small></td>
+                            <td>
+                                <strong class="{% if t.transaction_type == 'INCOME' %}text-success{% else %}text-danger{% endif %}">
+                                    {% if t.transaction_type == 'INCOME' %}+{% else %}-{% endif %}₹{{ t.amount }}
+                                </strong>
+                            </td>
+                            <td class="text-end">
+                                <form method="post" action="{% url 'finance:transaction_delete' t.id %}" class="d-inline" onsubmit="return confirm('Delete transaction?');">
+                                    {% csrf_token %}
+                                    <button type="submit" class="btn btn-sm btn-link text-danger p-0"><i class="fa-solid fa-trash"></i></button>
+                                </form>
+                            </td>
+                        </tr>
+                        {% empty %}
+                        <tr>
+                            <td colspan="6" class="text-center py-4 text-muted small">No transactions recorded for this month.</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Add Transaction Modal -->
+<div class="modal fade" id="addTransactionModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content rounded-4 border-0">
+            <div class="modal-header border-0 pb-0">
+                <h5 class="modal-title fw-bold">Record Transaction</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <form method="post" action="{% url 'finance:finance' %}">
+                {% csrf_token %}
+                <input type="hidden" name="action" value="add_transaction">
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label class="form-label small fw-semibold">Type</label>
+                        <div class="d-flex gap-3">
+                            <label class="form-check-label border p-2 rounded flex-grow-1 cursor-pointer">
+                                <input type="radio" name="transaction_type" value="EXPENSE" checked class="form-check-input me-1">
+                                <span class="text-danger fw-bold">Expense</span>
+                            </label>
+                            <label class="form-check-label border p-2 rounded flex-grow-1 cursor-pointer">
+                                <input type="radio" name="transaction_type" value="INCOME" class="form-check-input me-1">
+                                <span class="text-success fw-bold">Income</span>
+                            </label>
+                        </div>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label small fw-semibold">Description</label>
+                        <input type="text" name="title" class="form-control" placeholder="e.g. Canteen Lunch / Metro Recharge" required>
+                    </div>
+                    <div class="row g-2 mb-3">
+                        <div class="col-md-6">
+                            <label class="form-label small fw-semibold">Amount (₹)</label>
+                            <input type="number" step="0.5" name="amount" class="form-control" placeholder="e.g. 250" required>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label small fw-semibold">Category</label>
+                            <select name="category_id" class="form-select">
+                                <option value="">-- None / General --</option>
+                                {% for c in categories %}
+                                <option value="{{ c.id }}">{{ c.name }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                    </div>
+                    <div class="row g-2 mb-3">
+                        <div class="col-md-6">
+                            <label class="form-label small fw-semibold">Date</label>
+                            <input type="date" name="date" class="form-control" value="{{ today|date:'Y-m-d' }}" required>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label small fw-semibold">Payment Mode</label>
+                            <select name="payment_method" class="form-select">
+                                <option value="UPI" selected>UPI / GPay / Paytm</option>
+                                <option value="CASH">Cash</option>
+                                <option value="CARD">Debit / Credit Card</option>
+                                <option value="NETBANKING">Net Banking</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label small fw-semibold">Notes (Optional)</label>
+                        <input type="text" name="notes" class="form-control" placeholder="Additional details...">
+                    </div>
+                </div>
+                <div class="modal-footer border-0 pt-0">
+                    <button type="button" class="btn btn-light" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn btn-primary px-4">Save Transaction</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- Set Budget Modal -->
+<div class="modal fade" id="setBudgetModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content rounded-4 border-0">
+            <div class="modal-header border-0 pb-0">
+                <h5 class="modal-title fw-bold">Set Monthly Category Budget</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <form method="post" action="{% url 'finance:finance' %}">
+                {% csrf_token %}
+                <input type="hidden" name="action" value="set_budget">
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label class="form-label small fw-semibold">Expense Category</label>
+                        <select name="category_id" class="form-select" required>
+                            {% for c in categories %}
+                            <option value="{{ c.id }}">{{ c.name }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="row g-2 mb-3">
+                        <div class="col-md-6">
+                            <label class="form-label small fw-semibold">Month</label>
+                            <input type="month" name="month" class="form-control" value="{{ selected_month }}" required>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label small fw-semibold">Allocated Budget (₹)</label>
+                            <input type="number" step="50" name="budget_amount" class="form-control" placeholder="e.g. 4000" required>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer border-0 pt-0">
+                    <button type="button" class="btn btn-light" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn btn-primary px-4">Set Budget</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}

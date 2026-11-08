@@ -1,0 +1,227 @@
+{% extends 'base.html' %}
+{% block title %}Calendar & Upcoming Agenda - LifeOS{% endblock %}
+
+{% block content %}
+<div class="d-flex flex-wrap justify-content-between align-items-center mb-4">
+    <div>
+        <h3 class="fw-bold mb-1">Unified Calendar & Agenda Overview</h3>
+        <p class="text-muted mb-0 small">Centralized schedule syncing classes, lab exams, assignment deadlines, and personal reminders (US19 - US20).</p>
+    </div>
+    <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addEventModal">
+        <i class="fa-solid fa-plus me-1"></i> Add Event / Reminder
+    </button>
+</div>
+
+<!-- Multi-Timeframe Agenda Sections (US20) -->
+<div class="row g-4 mb-4">
+    <!-- Next 24 Hours -->
+    <div class="col-lg-4">
+        <div class="card border-0 shadow-sm rounded-4 h-100 p-3 bg-white" style="border-top: 4px solid #ef4444 !important;">
+            <div class="d-flex justify-content-between align-items-center mb-3">
+                <h6 class="fw-bold mb-0 text-danger"><i class="fa-solid fa-bolt me-1"></i>Next 24 Hours (Urgent)</h6>
+                <span class="badge bg-danger-subtle text-danger border border-danger-subtle">{{ events_24h.count }} event(s)</span>
+            </div>
+            <div class="d-flex flex-column gap-2">
+                {% for ev in events_24h %}
+                <div class="p-2 rounded bg-light border">
+                    <div class="d-flex justify-content-between">
+                        <strong class="text-dark small">{{ ev.title }}</strong>
+                        <span class="badge bg-danger" style="font-size: 10px;">{{ ev.start_time|date:"H:i" }}</span>
+                    </div>
+                    <small class="text-muted d-block" style="font-size: 11px;"><i class="fa-solid fa-location-dot me-1"></i>{{ ev.location|default:'Online / Campus' }}</small>
+                </div>
+                {% empty %}
+                <p class="text-muted small text-center my-4">Nothing scheduled in the next 24 hours.</p>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+
+    <!-- Next 7 Days -->
+    <div class="col-lg-4">
+        <div class="card border-0 shadow-sm rounded-4 h-100 p-3 bg-white" style="border-top: 4px solid #3b82f6 !important;">
+            <div class="d-flex justify-content-between align-items-center mb-3">
+                <h6 class="fw-bold mb-0 text-primary"><i class="fa-solid fa-calendar-week me-1"></i>This Week (Next 7 Days)</h6>
+                <span class="badge bg-primary-subtle text-primary border border-primary-subtle">{{ events_7d.count }} event(s)</span>
+            </div>
+            <div class="d-flex flex-column gap-2">
+                {% for ev in events_7d %}
+                <div class="p-2 rounded bg-light border">
+                    <div class="d-flex justify-content-between">
+                        <strong class="text-dark small">{{ ev.title }}</strong>
+                        <span class="badge bg-primary" style="font-size: 10px;">{{ ev.start_time|date:"D, M d" }}</span>
+                    </div>
+                    <small class="text-muted d-block" style="font-size: 11px;"><i class="fa-solid fa-location-dot me-1"></i>{{ ev.location|default:'College Lab' }}</small>
+                </div>
+                {% empty %}
+                <p class="text-muted small text-center my-4">No events scheduled this week.</p>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+
+    <!-- Upcoming This Month -->
+    <div class="col-lg-4">
+        <div class="card border-0 shadow-sm rounded-4 h-100 p-3 bg-white" style="border-top: 4px solid #10b981 !important;">
+            <div class="d-flex justify-content-between align-items-center mb-3">
+                <h6 class="fw-bold mb-0 text-success"><i class="fa-solid fa-calendar-days me-1"></i>Later This Month</h6>
+                <span class="badge bg-success-subtle text-success border border-success-subtle">{{ events_30d.count }} event(s)</span>
+            </div>
+            <div class="d-flex flex-column gap-2">
+                {% for ev in events_30d %}
+                <div class="p-2 rounded bg-light border">
+                    <div class="d-flex justify-content-between">
+                        <strong class="text-dark small">{{ ev.title }}</strong>
+                        <span class="badge bg-success" style="font-size: 10px;">{{ ev.start_time|date:"M d" }}</span>
+                    </div>
+                    <small class="text-muted d-block" style="font-size: 11px;">{{ ev.location }}</small>
+                </div>
+                {% empty %}
+                <p class="text-muted small text-center my-4">No later events on calendar.</p>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Integrated Academic Deadlines Sync -->
+<div class="card border-0 shadow-sm rounded-4 bg-white p-4 mb-4">
+    <h5 class="fw-bold mb-3"><i class="fa-solid fa-link text-primary me-2"></i>Academic Deadlines & Examinations Sync</h5>
+    <div class="row g-3">
+        <div class="col-md-6">
+            <h6 class="fw-bold small text-muted text-uppercase mb-2">Assignment Deadlines (Pending / In Progress)</h6>
+            <div class="list-group list-group-flush">
+                {% for a in upcoming_assignments %}
+                <div class="list-group-item px-0 py-2 d-flex justify-content-between align-items-center">
+                    <div>
+                        <strong class="text-dark small d-block">{{ a.title }}</strong>
+                        <small class="text-muted">{{ a.subject.code }} • {{ a.subject.name|truncatechars:25 }}</small>
+                    </div>
+                    <span class="badge bg-warning text-dark border">{{ a.due_date|date:"M d, H:i" }}</span>
+                </div>
+                {% empty %}
+                <small class="text-muted">No pending assignment deadlines.</small>
+                {% endfor %}
+            </div>
+        </div>
+        <div class="col-md-6">
+            <h6 class="fw-bold small text-muted text-uppercase mb-2">Examination Schedule</h6>
+            <div class="list-group list-group-flush">
+                {% for ex in upcoming_exams %}
+                <div class="list-group-item px-0 py-2 d-flex justify-content-between align-items-center">
+                    <div>
+                        <strong class="text-dark small d-block">{{ ex.exam_name }}</strong>
+                        <small class="text-muted">{{ ex.subject.code }} • {{ ex.venue }}</small>
+                    </div>
+                    <span class="badge bg-danger">{{ ex.exam_date }}</span>
+                </div>
+                {% empty %}
+                <small class="text-muted">No upcoming exams scheduled.</small>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- All Scheduled Events Table -->
+<div class="card border-0 shadow-sm rounded-4 bg-white overflow-hidden">
+    <div class="card-header bg-white border-0 py-3">
+        <h5 class="fw-bold mb-0">All Calendar Events</h5>
+    </div>
+    <div class="table-responsive">
+        <table class="table table-hover align-middle mb-0">
+            <thead class="table-light small text-uppercase text-muted">
+                <tr>
+                    <th>Event Title</th>
+                    <th>Type</th>
+                    <th>Start Time</th>
+                    <th>End Time</th>
+                    <th>Location</th>
+                    <th class="text-end">Action</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for ev in events %}
+                <tr>
+                    <td>
+                        <strong class="text-dark d-block">{{ ev.title }}</strong>
+                        {% if ev.description %}<small class="text-muted">{{ ev.description|truncatechars:40 }}</small>{% endif %}
+                    </td>
+                    <td><span class="badge bg-light text-dark border">{{ ev.get_event_type_display }}</span></td>
+                    <td><small class="fw-semibold">{{ ev.start_time|date:"Y-m-d H:i" }}</small></td>
+                    <td><small class="text-muted">{{ ev.end_time|date:"Y-m-d H:i"|default:'-' }}</small></td>
+                    <td><small class="text-muted">{{ ev.location|default:'-' }}</small></td>
+                    <td class="text-end">
+                        <form method="post" action="{% url 'calendar_events:event_delete' ev.id %}" onsubmit="return confirm('Delete this event?');">
+                            {% csrf_token %}
+                            <button type="submit" class="btn btn-sm btn-link text-danger p-0"><i class="fa-solid fa-trash"></i></button>
+                        </form>
+                    </td>
+                </tr>
+                {% empty %}
+                <tr>
+                    <td colspan="6" class="text-center py-4 text-muted small">No events scheduled.</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<!-- Add Event Modal -->
+<div class="modal fade" id="addEventModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content rounded-4 border-0">
+            <div class="modal-header border-0 pb-0">
+                <h5 class="modal-title fw-bold">Schedule Calendar Event</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <form method="post" action="{% url 'calendar_events:calendar' %}">
+                {% csrf_token %}
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label class="form-label small fw-semibold">Event Title</label>
+                        <input type="text" name="title" class="form-control" placeholder="e.g. Agile Lab Viva / Interview" required>
+                    </div>
+                    <div class="row g-2 mb-3">
+                        <div class="col-md-6">
+                            <label class="form-label small fw-semibold">Event Type</label>
+                            <select name="event_type" class="form-select">
+                                <option value="PROJECT">Project Review / Lab</option>
+                                <option value="CLASS">Class / Lecture</option>
+                                <option value="EXAM">Examination</option>
+                                <option value="ASSIGNMENT">Assignment Deadline</option>
+                                <option value="INTERVIEW">Job / Internship Interview</option>
+                                <option value="EVENT">Campus Event / Hackathon</option>
+                                <option value="PERSONAL" selected>Personal Reminder</option>
+                            </select>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label small fw-semibold">Location / Link</label>
+                            <input type="text" name="location" class="form-control" placeholder="Lab-3 / Google Meet">
+                        </div>
+                    </div>
+                    <div class="row g-2 mb-3">
+                        <div class="col-md-6">
+                            <label class="form-label small fw-semibold">Start Date & Time</label>
+                            <input type="datetime-local" name="start_time" class="form-control" required>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label small fw-semibold">End Date & Time</label>
+                            <input type="datetime-local" name="end_time" class="form-control">
+                        </div>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label small fw-semibold">Description / Preparation Notes</label>
+                        <textarea name="description" class="form-control" rows="2"></textarea>
+                    </div>
+                </div>
+                <div class="modal-footer border-0 pt-0">
+                    <button type="button" class="btn btn-light" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn btn-primary px-4">Schedule Event</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,134 @@
+{% extends 'base.html' %}
+{% block page_title %}Calendar and Career tracker{% endblock %}
+
+{% block content %}
+<div class="row g-4">
+    <!-- Calendar Left Column (Figure: Calendar and Career tracker) -->
+    <div class="col-lg-8">
+        <div class="lifeos-card">
+            <!-- Calendar Navigation Header -->
+            <div class="d-flex justify-content-between align-items-center mb-3">
+                <h5 class="fw-bold mb-0 text-dark">{{ month_name }} {{ year }}</h5>
+                <div class="d-flex gap-2">
+                    <div class="btn-group btn-group-sm">
+                        <a href="?year={{ prev_year }}&month={{ prev_month }}" class="btn btn-outline-secondary">&lsaquo;</a>
+                        <a href="?year=2026&month=11" class="btn btn-outline-secondary">Nov 2026</a>
+                        <a href="?year={{ next_year }}&month={{ next_month }}" class="btn btn-outline-secondary">&rsaquo;</a>
+                    </div>
+                    <a href="{% url 'planner:event_create' %}" class="btn btn-sm btn-primary" style="background-color: #3b82f6;">+ Add Event</a>
+                </div>
+            </div>
+
+            <!-- Month Calendar Grid -->
+            <div class="calendar-grid">
+                <!-- Day Headers -->
+                <div class="calendar-header-cell">Mon</div>
+                <div class="calendar-header-cell">Tue</div>
+                <div class="calendar-header-cell">Wed</div>
+                <div class="calendar-header-cell">Thu</div>
+                <div class="calendar-header-cell">Fri</div>
+                <div class="calendar-header-cell">Sat</div>
+                <div class="calendar-header-cell">Sun</div>
+
+                <!-- Date Cells -->
+                {% for week in weeks %}
+                    {% for day in week %}
+                    <div class="calendar-day-cell {% if not day.is_current_month %}other-month{% endif %}">
+                        <div class="day-number text-muted">{{ day.day }}</div>
+                        {% for ev in day.events %}
+                        <div class="event-pill" style="background-color: {{ ev.color }};" title="{{ ev.title }}">
+                            {{ ev.title|truncatechars:18 }}
+                        </div>
+                        {% endfor %}
+                    </div>
+                    {% endfor %}
+                {% endfor %}
+            </div>
+
+            <!-- Calendar Legend matching Figure: Calendar and Career tracker -->
+            <div class="d-flex align-items-center gap-4 mt-3 small">
+                <span class="text-muted fw-semibold">Legend:</span>
+                <span class="d-inline-flex align-items-center gap-1">
+                    <span class="rounded-1" style="width: 12px; height: 12px; background-color: #3b82f6;"></span> Class
+                </span>
+                <span class="d-inline-flex align-items-center gap-1">
+                    <span class="rounded-1" style="width: 12px; height: 12px; background-color: #ef4444;"></span> Exam
+                </span>
+                <span class="d-inline-flex align-items-center gap-1">
+                    <span class="rounded-1" style="width: 12px; height: 12px; background-color: #f59e0b;"></span> Deadline
+                </span>
+                <span class="d-inline-flex align-items-center gap-1">
+                    <span class="rounded-1" style="width: 12px; height: 12px; background-color: #10b981;"></span> Personal
+                </span>
+            </div>
+        </div>
+    </div>
+
+    <!-- Career Tracker Right Column (Figure: Calendar and Career tracker) -->
+    <div class="col-lg-4">
+        <div class="lifeos-card">
+            <div class="d-flex justify-content-between align-items-center mb-3">
+                <h6 class="fw-bold mb-0 text-dark">Internship applications</h6>
+                <a href="{% url 'career:create' %}" class="btn btn-sm btn-link p-0 text-decoration-none" style="color: #3b82f6;">+ Add</a>
+            </div>
+
+            <!-- Applied (2) -->
+            <div class="mb-3">
+                <div class="small fw-bold mb-2" style="color: #2563eb;">Applied (2)</div>
+                <div class="d-flex flex-column gap-2">
+                    <div class="p-3 rounded-3 border bg-light">
+                        <div class="d-flex justify-content-between align-items-start">
+                            <div>
+                                <strong class="text-dark d-block">Infosys</strong>
+                                <small class="text-muted">SDE Intern</small>
+                            </div>
+                            <span class="text-primary small">resume.pdf</span>
+                        </div>
+                    </div>
+                    <div class="p-3 rounded-3 border bg-light">
+                        <div class="d-flex justify-content-between align-items-start">
+                            <div>
+                                <strong class="text-dark d-block">Zoho</strong>
+                                <small class="text-muted">Web Dev</small>
+                            </div>
+                            <span class="text-primary small">resume.pdf</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Interview (1) -->
+            <div class="mb-3">
+                <div class="small fw-bold mb-2" style="color: #d97706;">Interview (1)</div>
+                <div class="p-3 rounded-3 border bg-light">
+                    <div class="d-flex justify-content-between align-items-start">
+                        <div>
+                            <strong class="text-dark d-block">Microsoft</strong>
+                            <small class="text-muted">SWE Intern</small>
+                        </div>
+                        <span class="text-primary small">resume.pdf</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Offer (1) -->
+            <div>
+                <div class="small fw-bold mb-2" style="color: #16a34a;">Offer (1)</div>
+                <div class="p-3 rounded-3 border bg-light">
+                    <div class="d-flex justify-content-between align-items-start">
+                        <div>
+                            <strong class="text-dark d-block">Adobe</strong>
+                            <small class="text-muted">Product Intern</small>
+                        </div>
+                        <span class="text-primary small">resume.pdf</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="mt-3 text-center">
+                <a href="{% url 'career:list' %}" class="small text-decoration-none" style="color: #3b82f6;">Manage all applications &rarr;</a>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

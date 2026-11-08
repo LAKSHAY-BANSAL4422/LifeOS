@@ -1,0 +1,133 @@
+{% extends 'base.html' %}
+{% block page_title %}Finance: November{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-end gap-2 mb-3">
+    <a href="{% url 'finance:transaction_create' %}" class="btn btn-sm btn-primary" style="background-color: #3b82f6;">+ Add Transaction</a>
+    <a href="{% url 'finance:budget_create' %}" class="btn btn-sm btn-outline-primary">+ Set Budget</a>
+    <a href="{% url 'finance:category_create' %}" class="btn btn-sm btn-outline-secondary">+ New Category</a>
+</div>
+
+<!-- 3 Top Metric Cards (Figure: Finance: November) -->
+<div class="row g-3 mb-4">
+    <div class="col-md-4">
+        <div class="stat-metric-card">
+            <div class="stat-label">Income</div>
+            <div class="stat-number text-success" style="color: #16a34a !important;">Rs {{ income_total }}</div>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="stat-metric-card">
+            <div class="stat-label">Expenses</div>
+            <div class="stat-number text-danger" style="color: #dc2626 !important;">Rs {{ expense_total }}</div>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="stat-metric-card">
+            <div class="stat-label">Balance</div>
+            <div class="stat-number text-primary" style="color: #2563eb !important;">Rs {{ balance }}</div>
+        </div>
+    </div>
+</div>
+
+<!-- Middle Row: Spending by category (Chart) & Budget status -->
+<div class="row g-3 mb-4">
+    <!-- Spending by category -->
+    <div class="col-lg-7">
+        <div class="lifeos-card h-100">
+            <div class="d-flex justify-content-between align-items-center mb-1">
+                <h6 class="fw-bold mb-0 text-dark">Spending by category</h6>
+                <small class="text-muted" style="font-size: 11px;">Black line = monthly budget</small>
+            </div>
+            <div style="height: 250px;">
+                <canvas id="categorySpendChart"></canvas>
+            </div>
+        </div>
+    </div>
+
+    <!-- Budget status -->
+    <div class="col-lg-5">
+        <div class="lifeos-card h-100">
+            <h6 class="fw-bold mb-3 text-dark">Budget status</h6>
+            <div class="d-flex flex-column gap-3">
+                {% for b in budget_items %}
+                <div>
+                    <div class="d-flex justify-content-between align-items-center mb-1 small">
+                        <span class="text-dark fw-medium">{{ b.category.name }}</span>
+                        <span class="text-muted">{{ b.spent }} / {{ b.limit }}</span>
+                    </div>
+                    <div class="custom-progress">
+                        <div class="custom-progress-bar" style="width: {{ b.pct }}%; background-color: {% if b.is_exceeded %}#ef4444{% else %}#10b981{% endif %};"></div>
+                    </div>
+                </div>
+                {% empty %}
+                <div class="text-muted small text-center py-4">No monthly budgets configured.</div>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Bottom Section: Recent transactions -->
+<div class="lifeos-card">
+    <h6 class="fw-bold mb-3 text-dark">Recent transactions</h6>
+    <div class="table-responsive">
+        <table class="table table-borderless align-middle mb-0">
+            <tbody>
+                {% for tx in recent_transactions %}
+                <tr class="border-bottom border-light">
+                    <td class="text-muted small py-2" style="width: 15%;">{{ tx.date|date:"d M" }}</td>
+                    <td class="fw-medium text-dark" style="width: 45%;">{{ tx.note|default:tx.category.name }}</td>
+                    <td class="text-muted small" style="width: 25%;">{{ tx.category.name|default:'General' }}</td>
+                    <td class="fw-semibold text-end" style="width: 15%;">
+                        <span class="{% if tx.type == 'income' %}text-success{% else %}text-danger{% endif %}">
+                            {% if tx.type == 'income' %}+ Rs {{ tx.amount }}{% else %}- Rs {{ tx.amount }}{% endif %}
+                        </span>
+                    </td>
+                </tr>
+                {% empty %}
+                <tr>
+                    <td colspan="4" class="text-center py-4 text-muted small">No transactions recorded.</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const labels = {{ chart_labels|safe }};
+    const spent = {{ chart_spent|safe }};
+    const budget = {{ chart_budget|safe }};
+
+    const ctx = document.getElementById('categorySpendChart').getContext('2d');
+    new Chart(ctx, {
+        type: 'bar',
+        data: {
+            labels: labels,
+            datasets: [
+                {
+                    label: 'Spent (Rs)',
+                    data: spent,
+                    backgroundColor: ['#ef4444', '#3b82f6', '#3b82f6', '#ef4444', '#64748b'],
+                    borderRadius: 4
+                }
+            ]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            scales: {
+                y: { beginAtZero: true }
+            },
+            plugins: {
+                legend: { display: false }
+            }
+        }
+    });
+});
+</script>
+{% endblock %}

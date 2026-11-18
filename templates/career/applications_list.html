@@ -1,0 +1,101 @@
+{% extends 'base.html' %}
+{% block page_title %}Career Tracker{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+        <p class="text-muted small mb-0">Track summer internship and placement applications across recruitment stages (Section 4.14).</p>
+    </div>
+    <a href="{% url 'career:create' %}" class="btn btn-primary" style="background-color: #3b82f6;">+ Add Application</a>
+</div>
+
+<div class="row g-4">
+    <!-- Applied -->
+    <div class="col-md-4">
+        <div class="lifeos-card h-100">
+            <h6 class="fw-bold mb-3" style="color: #2563eb;">Applied ({{ applied_list.count }})</h6>
+            <div class="d-flex flex-column gap-3">
+                {% for app in applied_list %}
+                <div class="p-3 rounded-3 border bg-light">
+                    <div class="d-flex justify-content-between align-items-start mb-2">
+                        <strong class="text-dark">{{ app.company }}</strong>
+                        <form method="post" action="{% url 'career:delete' app.id %}" onsubmit="return confirm('Delete?');">
+                            {% csrf_token %}
+                            <button type="submit" class="btn btn-link text-muted p-0"><i class="fa-solid fa-trash" style="font-size: 11px;"></i></button>
+                        </form>
+                    </div>
+                    <div class="text-muted small mb-2">{{ app.role }} • {{ app.applied_date }}</div>
+                    {% if app.document %}
+                    <a href="{{ app.document.url }}" target="_blank" class="small text-primary text-decoration-none">
+                        <i class="fa-solid fa-paperclip me-1"></i> {{ app.document_filename }}
+                    </a>
+                    {% endif %}
+                    <form method="post" action="{% url 'career:status_update' app.id %}" class="mt-2">
+                        {% csrf_token %}
+                        <select name="status" class="form-select form-select-sm" onchange="this.form.submit()" style="font-size: 11px;">
+                            <option value="applied" selected>Status: Applied</option>
+                            <option value="interview">Move to: Interview</option>
+                            <option value="offer">Move to: Offer</option>
+                            <option value="rejected">Move to: Rejected</option>
+                        </select>
+                    </form>
+                </div>
+                {% empty %}
+                <div class="text-muted small text-center py-3">No applications in this stage.</div>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+
+    <!-- Interview -->
+    <div class="col-md-4">
+        <div class="lifeos-card h-100">
+            <h6 class="fw-bold mb-3" style="color: #d97706;">Interview ({{ interview_list.count }})</h6>
+            <div class="d-flex flex-column gap-3">
+                {% for app in interview_list %}
+                <div class="p-3 rounded-3 border bg-light">
+                    <div class="d-flex justify-content-between align-items-start mb-2">
+                        <strong class="text-dark">{{ app.company }}</strong>
+                        <form method="post" action="{% url 'career:delete' app.id %}" onsubmit="return confirm('Delete?');">
+                            {% csrf_token %}
+                            <button type="submit" class="btn btn-link text-muted p-0"><i class="fa-solid fa-trash" style="font-size: 11px;"></i></button>
+                        </form>
+                    </div>
+                    <div class="text-muted small mb-2">{{ app.role }}</div>
+                    {% if app.notes %}<p class="small text-muted mb-2 font-monospace" style="font-size: 11px;">{{ app.notes }}</p>{% endif %}
+                    <form method="post" action="{% url 'career:status_update' app.id %}">
+                        {% csrf_token %}
+                        <select name="status" class="form-select form-select-sm" onchange="this.form.submit()" style="font-size: 11px;">
+                            <option value="interview" selected>Status: Interview</option>
+                            <option value="offer">Move to: Offer 🎉</option>
+                            <option value="rejected">Move to: Rejected</option>
+                        </select>
+                    </form>
+                </div>
+                {% empty %}
+                <div class="text-muted small text-center py-3">No active interviews scheduled.</div>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+
+    <!-- Offer -->
+    <div class="col-md-4">
+        <div class="lifeos-card h-100">
+            <h6 class="fw-bold mb-3" style="color: #16a34a;">Offer ({{ offer_list.count }})</h6>
+            <div class="d-flex flex-column gap-3">
+                {% for app in offer_list %}
+                <div class="p-3 rounded-3 border bg-light" style="border-left: 4px solid #16a34a !important;">
+                    <strong class="text-dark d-block">{{ app.company }}</strong>
+                    <div class="text-muted small mb-2">{{ app.role }}</div>
+                    <span class="badge bg-success-subtle text-success border border-success-subtle mb-2">Offer Received 🎉</span>
+                    {% if app.notes %}<p class="small text-muted mb-0" style="font-size: 11px;">{{ app.notes }}</p>{% endif %}
+                </div>
+                {% empty %}
+                <div class="text-muted small text-center py-3">No offers yet. Keep applying!</div>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

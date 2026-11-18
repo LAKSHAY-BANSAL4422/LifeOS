@@ -1,0 +1,255 @@
+{% extends 'base.html' %}
+{% block title %}Centralized Analytics Dashboard - LifeOS{% endblock %}
+
+{% block content %}
+<div class="d-flex flex-wrap justify-content-between align-items-center mb-4">
+    <div>
+        <h3 class="fw-bold mb-1">Centralized Analytics & Performance Insights</h3>
+        <p class="text-muted mb-0 small">Aggregated data visualizations across academics, tasks, consistency, finances, and placements (US24).</p>
+    </div>
+    <span class="badge bg-primary-subtle text-primary border border-primary-subtle px-3 py-2">
+        <i class="fa-solid fa-chart-simple me-1"></i> Real-time Aggregation
+    </span>
+</div>
+
+<!-- KPI Summary Cards -->
+<div class="row g-3 mb-4">
+    <div class="col-sm-6 col-lg-3">
+        <div class="card card-stat p-3 bg-white">
+            <span class="text-muted small fw-semibold text-uppercase">Cumulative GPA (CGPA)</span>
+            <h2 class="fw-bold my-1 text-primary">{{ cgpa }} <span class="fs-6 text-muted">/ 10</span></h2>
+            <small class="text-success"><i class="fa-solid fa-arrow-trend-up me-1"></i>Good standing</small>
+        </div>
+    </div>
+    <div class="col-sm-6 col-lg-3">
+        <div class="card card-stat p-3 bg-white">
+            <span class="text-muted small fw-semibold text-uppercase">Assignment Submissions</span>
+            <h2 class="fw-bold my-1 text-success">{{ assignment_rate }}%</h2>
+            <small class="text-muted">Completed vs scheduled</small>
+        </div>
+    </div>
+    <div class="col-sm-6 col-lg-3">
+        <div class="card card-stat p-3 bg-white">
+            <span class="text-muted small fw-semibold text-uppercase">Task Completion Rate</span>
+            <h2 class="fw-bold my-1 text-info">{{ task_completion_rate }}%</h2>
+            <small class="text-muted">{{ completed_tasks }} of {{ total_tasks }} tasks resolved</small>
+        </div>
+    </div>
+    <div class="col-sm-6 col-lg-3">
+        <div class="card card-stat p-3 bg-white">
+            <span class="text-muted small fw-semibold text-uppercase">Monthly Net Balance</span>
+            <h2 class="fw-bold my-1 {% if net_savings >= 0 %}text-success{% else %}text-danger{% endif %}">₹{{ net_savings }}</h2>
+            <small class="text-muted">Inflow: ₹{{ income_sum }} | Outflow: ₹{{ expense_sum }}</small>
+        </div>
+    </div>
+</div>
+
+<!-- Charts Grid -->
+<div class="row g-4 mb-4">
+    <!-- Chart 1: Subject Attendance vs 75% Threshold -->
+    <div class="col-lg-7">
+        <div class="card border-0 shadow-sm rounded-4 p-4 bg-white h-100">
+            <div class="d-flex justify-content-between align-items-center mb-3">
+                <div>
+                    <h5 class="fw-bold mb-0">Subject Attendance vs 75% Mandatory Target</h5>
+                    <small class="text-muted">Red reference line marks minimum attendance to prevent debarment</small>
+                </div>
+                <span class="badge bg-danger">75% Target</span>
+            </div>
+            <div style="height: 300px;">
+                <canvas id="attendanceChart"></canvas>
+            </div>
+        </div>
+    </div>
+
+    <!-- Chart 2: Eisenhower Matrix Task Distribution -->
+    <div class="col-lg-5">
+        <div class="card border-0 shadow-sm rounded-4 p-4 bg-white h-100">
+            <div class="d-flex justify-content-between align-items-center mb-3">
+                <div>
+                    <h5 class="fw-bold mb-0">Task Prioritization Distribution</h5>
+                    <small class="text-muted">Eisenhower urgent vs important breakdown</small>
+                </div>
+            </div>
+            <div style="height: 300px;" class="d-flex align-items-center justify-content-center">
+                <canvas id="eisenhowerChart"></canvas>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row g-4">
+    <!-- Chart 3: Habit Consistency (30-Day Rate) -->
+    <div class="col-lg-4">
+        <div class="card border-0 shadow-sm rounded-4 p-4 bg-white h-100">
+            <h5 class="fw-bold mb-1">Habit 30-Day Consistency</h5>
+            <small class="text-muted mb-3 d-block">Percentage completion over past month</small>
+            <div style="height: 260px;">
+                <canvas id="habitChart"></canvas>
+            </div>
+        </div>
+    </div>
+
+    <!-- Chart 4: Monthly Spending Breakdown -->
+    <div class="col-lg-4">
+        <div class="card border-0 shadow-sm rounded-4 p-4 bg-white h-100">
+            <h5 class="fw-bold mb-1">Expense Breakdown by Category</h5>
+            <small class="text-muted mb-3 d-block">Where your money goes this month</small>
+            <div style="height: 260px;" class="d-flex align-items-center justify-content-center">
+                <canvas id="financeChart"></canvas>
+            </div>
+        </div>
+    </div>
+
+    <!-- Chart 5: Placement Pipeline Funnel -->
+    <div class="col-lg-4">
+        <div class="card border-0 shadow-sm rounded-4 p-4 bg-white h-100">
+            <h5 class="fw-bold mb-1">Career Pipeline Stages</h5>
+            <small class="text-muted mb-3 d-block">Internship & job applications status</small>
+            <div style="height: 260px;">
+                <canvas id="careerChart"></canvas>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // 1. Attendance Chart
+    const subLabels = {{ subject_labels_json|safe }};
+    const subData = {{ subject_attendance_json|safe }};
+    const subColors = {{ subject_colors_json|safe }};
+
+    const ctxAtt = document.getElementById('attendanceChart').getContext('2d');
+    new Chart(ctxAtt, {
+        type: 'bar',
+        data: {
+            labels: subLabels,
+            datasets: [
+                {
+                    label: 'Attendance %',
+                    data: subData,
+                    backgroundColor: subData.map(v => v >= 75 ? '#10b981' : '#ef4444'),
+                    borderRadius: 6
+                }
+            ]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            scales: {
+                y: {
+                    beginAtZero: true,
+                    max: 100,
+                    ticks: {
+                        callback: val => val + '%'
+                    }
+                }
+            },
+            plugins: {
+                tooltip: {
+                    callbacks: {
+                        label: ctx => `Attendance: ${ctx.raw}%`
+                    }
+                }
+            }
+        }
+    });
+
+    // 2. Eisenhower Matrix Chart
+    const eisenhowerData = {{ eisenhower_json|safe }};
+    const ctxEis = document.getElementById('eisenhowerChart').getContext('2d');
+    new Chart(ctxEis, {
+        type: 'doughnut',
+        data: {
+            labels: ['Q1: Do First (Urgent)', 'Q2: Schedule (Important)', 'Q3: Delegate', 'Q4: Eliminate'],
+            datasets: [{
+                data: eisenhowerData,
+                backgroundColor: ['#ef4444', '#3b82f6', '#f59e0b', '#94a3b8']
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: { position: 'bottom' }
+            }
+        }
+    });
+
+    // 3. Habit Consistency Chart
+    const habitLabels = {{ habit_labels_json|safe }};
+    const habitRates = {{ habit_rates_json|safe }};
+    const ctxHabit = document.getElementById('habitChart').getContext('2d');
+    new Chart(ctxHabit, {
+        type: 'bar',
+        data: {
+            labels: habitLabels,
+            datasets: [{
+                label: 'Consistency Rate (%)',
+                data: habitRates,
+                backgroundColor: '#059669',
+                borderRadius: 6
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            scales: {
+                y: { beginAtZero: true, max: 100 }
+            }
+        }
+    });
+
+    // 4. Finance Chart
+    const financeLabels = {{ finance_labels_json|safe }};
+    const financeAmounts = {{ finance_amounts_json|safe }};
+    const financeColors = {{ finance_colors_json|safe }};
+    const ctxFin = document.getElementById('financeChart').getContext('2d');
+    new Chart(ctxFin, {
+        type: 'pie',
+        data: {
+            labels: financeLabels.length ? financeLabels : ['No Expenses Yet'],
+            datasets: [{
+                data: financeAmounts.length ? financeAmounts : [1],
+                backgroundColor: financeColors.length ? financeColors : ['#cbd5e1']
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: { position: 'bottom' }
+            }
+        }
+    });
+
+    // 5. Career Pipeline Funnel Chart
+    const careerLabels = {{ career_labels_json|safe }};
+    const careerCounts = {{ career_counts_json|safe }};
+    const ctxCareer = document.getElementById('careerChart').getContext('2d');
+    new Chart(ctxCareer, {
+        type: 'bar',
+        data: {
+            labels: careerLabels,
+            datasets: [{
+                label: 'Applications',
+                data: careerCounts,
+                backgroundColor: '#7c3aed',
+                borderRadius: 6
+            }]
+        },
+        options: {
+            indexAxis: 'y',
+            responsive: true,
+            maintainAspectRatio: false,
+            scales: {
+                x: { beginAtZero: true, ticks: { stepSize: 1 } }
+            }
+        }
+    });
+});
+</script>
+{% endblock %}

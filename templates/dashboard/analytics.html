@@ -1,0 +1,154 @@
+{% extends 'base.html' %}
+{% block page_title %}Analytics & Visualizations{% endblock %}
+
+{% block content %}
+<div class="mb-4">
+    <p class="text-muted small mb-0">Aggregated productivity, academic indicators, spending patterns, and consistency statistics (Section 4.15).</p>
+</div>
+
+<div class="row g-4 mb-4">
+    <!-- Chart 1: Subject-wise Attendance -->
+    <div class="col-lg-6">
+        <div class="lifeos-card h-100">
+            <h6 class="fw-bold mb-1 text-dark">Subject-wise Attendance (%)</h6>
+            <small class="text-muted mb-3 d-block">Minimum mandatory requirement: 75%</small>
+            <div style="height: 260px;">
+                <canvas id="analyticsAttendanceChart"></canvas>
+            </div>
+        </div>
+    </div>
+
+    <!-- Chart 2: Task Completion Status -->
+    <div class="col-lg-6">
+        <div class="lifeos-card h-100">
+            <h6 class="fw-bold mb-1 text-dark">Task Completion Ratio</h6>
+            <small class="text-muted mb-3 d-block">{{ completed_tasks }} of {{ total_tasks }} tasks resolved</small>
+            <div style="height: 260px;" class="d-flex align-items-center justify-content-center">
+                <canvas id="analyticsTaskChart"></canvas>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row g-4">
+    <!-- Chart 3: Spending by Category -->
+    <div class="col-lg-6">
+        <div class="lifeos-card h-100">
+            <h6 class="fw-bold mb-1 text-dark">Monthly Spending by Category</h6>
+            <small class="text-muted mb-3 d-block">Aggregated expenditure distribution</small>
+            <div style="height: 260px;" class="d-flex align-items-center justify-content-center">
+                <canvas id="analyticsFinanceChart"></canvas>
+            </div>
+        </div>
+    </div>
+
+    <!-- Chart 4: Habit Consistency -->
+    <div class="col-lg-6">
+        <div class="lifeos-card h-100">
+            <h6 class="fw-bold mb-1 text-dark">Habit Consistency (Last 30 Days)</h6>
+            <small class="text-muted mb-3 d-block">Percentage of completed daily logs</small>
+            <div style="height: 260px;">
+                <canvas id="analyticsHabitChart"></canvas>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // 1. Attendance Chart
+    const subNames = {{ sub_names_json|safe }};
+    const subPcts = {{ sub_pcts_json|safe }};
+    const ctxAtt = document.getElementById('analyticsAttendanceChart').getContext('2d');
+    new Chart(ctxAtt, {
+        type: 'bar',
+        data: {
+            labels: subNames,
+            datasets: [{
+                label: 'Attendance %',
+                data: subPcts,
+                backgroundColor: subPcts.map(p => p >= 75 ? '#10b981' : '#ef4444'),
+                borderRadius: 4
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            scales: {
+                y: { beginAtZero: true, max: 100 }
+            }
+        }
+    });
+
+    // 2. Task Pie Chart
+    const taskData = {{ task_pie_json|safe }};
+    const ctxTask = document.getElementById('analyticsTaskChart').getContext('2d');
+    new Chart(ctxTask, {
+        type: 'doughnut',
+        data: {
+            labels: ['Completed', 'Pending'],
+            datasets: [{
+                data: taskData,
+                backgroundColor: ['#10b981', '#3b82f6']
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: { position: 'bottom' }
+            }
+        }
+    });
+
+    // 3. Finance Pie
+    const finLabels = {{ fin_labels_json|safe }};
+    const finAmounts = {{ fin_amounts_json|safe }};
+    const finColors = {{ fin_colors_json|safe }};
+    const ctxFin = document.getElementById('analyticsFinanceChart').getContext('2d');
+    new Chart(ctxFin, {
+        type: 'pie',
+        data: {
+            labels: finLabels.length ? finLabels : ['No expense'],
+            datasets: [{
+                data: finAmounts.length ? finAmounts : [1],
+                backgroundColor: finColors.length ? finColors : ['#cbd5e1']
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: { position: 'bottom' }
+            }
+        }
+    });
+
+    // 4. Habit Chart
+    const habitNames = {{ habit_names_json|safe }};
+    const habitCons = {{ habit_consistencies_json|safe }};
+    const ctxHabit = document.getElementById('analyticsHabitChart').getContext('2d');
+    new Chart(ctxHabit, {
+        type: 'bar',
+        data: {
+            labels: habitNames,
+            datasets: [{
+                label: 'Consistency %',
+                data: habitCons,
+                backgroundColor: '#3b82f6',
+                borderRadius: 4
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            scales: {
+                y: { beginAtZero: true, max: 100 }
+            }
+        }
+    });
+});
+</script>
+{% endblock %}

@@ -1,0 +1,48 @@
+{% extends 'base.html' %}
+{% block page_title %}Track Job Application{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-6">
+        <div class="lifeos-card">
+            <h5 class="fw-bold mb-3">Track Career Application</h5>
+            <form method="post" enctype="multipart/form-data">
+                {% csrf_token %}
+                <div class="row g-2 mb-3">
+                    <div class="col-6">
+                        <label class="form-label small fw-semibold text-secondary">Company Name</label>
+                        <input type="text" name="company" class="form-control" placeholder="e.g. Microsoft" required>
+                    </div>
+                    <div class="col-6">
+                        <label class="form-label small fw-semibold text-secondary">Role Title</label>
+                        <input type="text" name="role" class="form-control" placeholder="e.g. SDE Intern" required>
+                    </div>
+                </div>
+                <div class="row g-2 mb-3">
+                    <div class="col-6">
+                        <label class="form-label small fw-semibold text-secondary">Status</label>
+                        {{ form.status }}
+                    </div>
+                    <div class="col-6">
+                        <label class="form-label small fw-semibold text-secondary">Applied Date</label>
+                        {{ form.applied_date }}
+                    </div>
+                </div>
+                <div class="mb-3">
+                    <label class="form-label small fw-semibold text-secondary">Upload Supporting Document (Resume / Offer Letter)</label>
+                    <input type="file" name="document" class="form-control">
+                    <small class="text-muted" style="font-size: 11px;">Max 5 MB. PDF, DOCX, DOC</small>
+                </div>
+                <div class="mb-4">
+                    <label class="form-label small fw-semibold text-secondary">Notes & Interview Debrief</label>
+                    <textarea name="notes" class="form-control" rows="2" placeholder="Referral notes, OA pattern..."></textarea>
+                </div>
+                <div class="d-flex justify-content-end gap-2">
+                    <a href="{% url 'career:list' %}" class="btn btn-light">Cancel</a>
+                    <button type="submit" class="btn btn-primary" style="background-color: #3b82f6;">Save Application</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}

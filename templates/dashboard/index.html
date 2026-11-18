@@ -1,0 +1,154 @@
+{% extends 'base.html' %}
+{% block page_title %}Dashboard{% endblock %}
+
+{% block content %}
+<div class="mb-4">
+    <h3 class="fw-bold mb-0">Good evening, {{ user.get_full_name|default:user.username }}</h3>
+</div>
+
+<!-- 4 Top Metric Cards (Figure: Dashboard) -->
+<div class="row g-3 mb-4">
+    <div class="col-sm-6 col-lg-3">
+        <div class="stat-metric-card">
+            <div class="stat-label">Pending tasks</div>
+            <div class="stat-number text-primary" style="color: #2563eb !important;">{{ pending_tasks_count }}</div>
+        </div>
+    </div>
+    <div class="col-sm-6 col-lg-3">
+        <div class="stat-metric-card">
+            <div class="stat-label">Attendance (avg)</div>
+            <div class="stat-number text-success" style="color: #16a34a !important;">{{ avg_attendance }}%</div>
+        </div>
+    </div>
+    <div class="col-sm-6 col-lg-3">
+        <div class="stat-metric-card">
+            <div class="stat-label">Active streaks</div>
+            <div class="stat-number text-warning" style="color: #d97706 !important;">{{ active_streaks_count }}</div>
+        </div>
+    </div>
+    <div class="col-sm-6 col-lg-3">
+        <div class="stat-metric-card">
+            <div class="stat-label">Month balance</div>
+            <div class="stat-number text-dark">Rs {{ month_balance }}</div>
+        </div>
+    </div>
+</div>
+
+<!-- Panels Row 1: Focus Now, Upcoming Deadlines, Habit Streaks -->
+<div class="row g-3 mb-3">
+    <!-- Panel 1: Focus now (priority) -->
+    <div class="col-lg-5">
+        <div class="lifeos-card h-100">
+            <div class="d-flex justify-content-between align-items-center mb-3">
+                <h6 class="fw-bold mb-0 text-dark">Focus now (priority)</h6>
+                <a href="{% url 'tasks:list' %}" class="small text-decoration-none text-muted">View all</a>
+            </div>
+            <div class="d-flex flex-column gap-3">
+                {% for item in focus_tasks %}
+                <div class="d-flex align-items-center justify-content-between">
+                    <span class="text-dark fw-medium">{{ item.task.title }}</span>
+                    <span class="priority-badge {{ item.score_class }}">
+                        {{ item.score }}
+                    </span>
+                </div>
+                {% empty %}
+                <div class="text-muted small text-center py-3">No pending tasks.</div>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+
+    <!-- Panel 2: Upcoming deadlines -->
+    <div class="col-lg-4">
+        <div class="lifeos-card h-100">
+            <div class="d-flex justify-content-between align-items-center mb-3">
+                <h6 class="fw-bold mb-0 text-dark">Upcoming deadlines</h6>
+                <a href="{% url 'planner:calendar' %}" class="small text-decoration-none text-muted">Calendar</a>
+            </div>
+            <div class="d-flex flex-column gap-3">
+                {% for d in upcoming_deadlines %}
+                <div class="d-flex align-items-center justify-content-between">
+                    <span class="text-dark fw-medium text-truncate me-2">{{ d.title }}</span>
+                    <span class="text-primary small fw-semibold text-nowrap">{{ d.date|date:"d M" }}</span>
+                </div>
+                {% empty %}
+                <div class="text-muted small text-center py-3">No upcoming deadlines.</div>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+
+    <!-- Panel 3: Habit streaks -->
+    <div class="col-lg-3">
+        <div class="lifeos-card h-100">
+            <div class="d-flex justify-content-between align-items-center mb-3">
+                <h6 class="fw-bold mb-0 text-dark">Habit streaks</h6>
+                <a href="{% url 'habits:list' %}" class="small text-decoration-none text-muted">All habits</a>
+            </div>
+            <div class="d-flex flex-column gap-3">
+                {% for item in habit_streak_items %}
+                <div class="d-flex align-items-center justify-content-between">
+                    <span class="text-dark fw-medium text-truncate me-2">{{ item.habit.name }}</span>
+                    <span class="fw-bold text-nowrap" style="color: #d97706;">{{ item.streak }}d</span>
+                </div>
+                {% empty %}
+                <div class="text-muted small text-center py-3">No active streaks.</div>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Panels Row 2: Goal progress, Spending this month -->
+<div class="row g-3">
+    <!-- Panel 4: Goal progress -->
+    <div class="col-lg-6">
+        <div class="lifeos-card h-100">
+            <div class="d-flex justify-content-between align-items-center mb-3">
+                <h6 class="fw-bold mb-0 text-dark">Goal progress</h6>
+                <a href="{% url 'goals:list' %}" class="small text-decoration-none text-muted">Goals</a>
+            </div>
+            <div class="d-flex flex-column gap-3">
+                {% for item in goal_items %}
+                <div>
+                    <div class="d-flex justify-content-between align-items-center mb-1">
+                        <span class="text-dark fw-medium small">{{ item.goal.title }}</span>
+                        <span class="small fw-semibold text-muted">{{ item.progress }}%</span>
+                    </div>
+                    <div class="custom-progress">
+                        <div class="custom-progress-bar bg-primary" style="width: {{ item.progress }}%; background-color: #3b82f6 !important;"></div>
+                    </div>
+                </div>
+                {% empty %}
+                <div class="text-muted small text-center py-3">No active goals.</div>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+
+    <!-- Panel 5: Spending this month -->
+    <div class="col-lg-6">
+        <div class="lifeos-card h-100">
+            <div class="d-flex justify-content-between align-items-center mb-3">
+                <h6 class="fw-bold mb-0 text-dark">Spending this month</h6>
+                <a href="{% url 'finance:index' %}" class="small text-decoration-none text-muted">Finance</a>
+            </div>
+            <div class="d-flex flex-column gap-3">
+                {% for item in spending_items %}
+                <div>
+                    <div class="d-flex align-items-center justify-content-between mb-1">
+                        <span class="text-dark fw-medium small" style="width: 70px;">{{ item.name }}</span>
+                        <div class="custom-progress flex-grow-1 mx-3">
+                            <div class="custom-progress-bar" style="width: {{ item.pct }}%; background-color: {{ item.color }};"></div>
+                        </div>
+                        <span class="text-dark small fw-medium text-nowrap" style="width: 70px; text-align: right;">Rs {{ item.spent }}</span>
+                    </div>
+                </div>
+                {% empty %}
+                <div class="text-muted small text-center py-3">No monthly budget recorded.</div>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
